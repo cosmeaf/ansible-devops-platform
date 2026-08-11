@@ -6,7 +6,7 @@ import redis
 from django.conf import settings
 from django.db import connection
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect
 from django.views.decorators.http import require_GET
 
 logger = logging.getLogger(__name__)
@@ -40,12 +40,14 @@ def _check_redis() -> bool:
 
 @require_GET
 def dashboard(request):
-    """Minimal landing page.
+    """Site root.
 
-    Server-rendered on purpose: it exists so a fresh installation is usable and
-    verifiable before the Next.js module lands, not as the product interface.
+    There is no separate landing page: the product is Ansible management, so an
+    authenticated user goes straight there and everyone else goes to sign in.
     """
-    return render(request, "dashboard/index.html", {"version": settings.VERSION})
+    if request.user.is_authenticated:
+        return redirect("manage:overview")
+    return redirect("login")
 
 
 @require_GET

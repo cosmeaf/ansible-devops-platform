@@ -315,6 +315,12 @@
     }
 
     .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+    .toolbar select {
+      padding: 7px 11px; font-family: inherit; font-size: 13.5px;
+      color: var(--text); background: var(--surface);
+      border: 1px solid var(--border); border-radius: 7px;
+    }
+    .toolbar select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
     .toolbar input[type=search] {
       padding: 7px 11px; font-family: inherit; font-size: 13.5px;
       color: var(--text); background: var(--surface);

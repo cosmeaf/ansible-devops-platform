@@ -13,11 +13,11 @@ management, powered by Ansible.
 > Module 1 (Core Platform) is the only module implemented. This is not yet
 > suitable for production use.
 
-![Platform management overview](docs/images/manage-overview.png)
+![Ansible management](docs/images/manage-servers.png)
 
 <p align="center">
-  <sub>The platform's own management interface — role-governed, and never
-  Django Admin. <a href="docs/interface.md">More screenshots</a></sub>
+  <sub>Managing Ansible infrastructure from the platform.
+  <a href="docs/interface.md">More screenshots</a></sub>
 </p>
 
 ---
@@ -60,7 +60,8 @@ Nothing below is marked available unless it exists in this repository today.
 - ✓ Database-backed platform settings with secret masking
 - ✓ Role-based access control — five system roles, permissions resolved
       through roles, `is_staff`/`is_superuser` derived rather than hand-set
-- ✓ Platform management interface at `/manage/` that never exposes Django Admin
+- ✓ Ansible infrastructure management at `/manage/` — servers, groups and
+      environments, mapping directly onto a standard Ansible inventory
 - ✓ Session authentication
 - ✓ Health endpoint reporting database and Redis state
 - ✓ Request-ID correlation across responses and logs
@@ -152,6 +153,7 @@ docker compose down         # stop, keeping data
 ├── audit/                 Audit trail, request-ID middleware, secret redaction
 ├── security/              Security event records
 ├── ipintel/               IP intelligence models and provider abstraction
+├── infrastructure/        Servers, groups, environments — what Ansible manages
 ├── settings_platform/     Database-backed operational settings
 ├── tests/                 Test suite (runs against real PostgreSQL)
 ├── templates/             Minimal server-rendered pages
