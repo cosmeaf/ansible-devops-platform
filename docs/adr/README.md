@@ -22,6 +22,8 @@ settled argument or reverses a decision without knowing what it cost.
 | [0008](0008-single-settings-module.md) | A single settings module | Accepted |
 | [0009](0009-ipintel-provider-abstraction.md) | Provider abstraction for IP intelligence | Accepted |
 | [0010](0010-audit-secret-redaction.md) | Redact secrets in the model layer | Accepted |
+| [0011](0011-role-based-access-control.md) | Roles are the only source of authorisation | Accepted |
+| [0012](0012-admin-is-not-product-surface.md) | Django Admin is not product surface | Accepted |
 
 ## Status meanings
 

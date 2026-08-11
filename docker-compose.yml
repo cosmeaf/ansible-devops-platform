@@ -72,8 +72,10 @@ services:
     container_name: ansible-celery
     restart: unless-stopped
     command: ["celery", "-A", "core", "worker", "-l", "INFO", "--concurrency", "2"]
+    # CMD-SHELL, not CMD: the exec form gives no shell, so $HOSTNAME would be
+    # passed through literally and the node would never be found.
     healthcheck:
-      test: ["CMD", "celery", "-A", "core", "inspect", "ping", "-d", "celery@$$HOSTNAME"]
+      test: ["CMD-SHELL", "celery -A core inspect ping -d celery@$$HOSTNAME"]
       interval: 30s
       timeout: 10s
       start_period: 40s
@@ -98,6 +100,16 @@ services:
       - INFO
       - --schedule
       - /var/run/ansible/celerybeat-schedule
+    # Beat serves no HTTP, so the image's curl-based HEALTHCHECK can never pass
+    # here and must be overridden. There is no `inspect ping` for beat either —
+    # it is a scheduler, not a worker — so liveness is PID 1 still being beat.
+    # Checked via /proc to avoid installing procps just for pgrep.
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q beat /proc/1/cmdline"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
 
 networks:
   ansible-network:

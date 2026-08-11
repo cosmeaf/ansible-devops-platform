@@ -13,6 +13,13 @@ management, powered by Ansible.
 > Module 1 (Core Platform) is the only module implemented. This is not yet
 > suitable for production use.
 
+![Platform management overview](docs/images/manage-overview.png)
+
+<p align="center">
+  <sub>The platform's own management interface — role-governed, and never
+  Django Admin. <a href="docs/interface.md">More screenshots</a></sub>
+</p>
+
 ---
 
 ## What this is
@@ -51,7 +58,10 @@ Nothing below is marked available unless it exists in this repository today.
 - ✓ Security event model
 - ✓ IP intelligence with a pluggable, offline-capable provider
 - ✓ Database-backed platform settings with secret masking
-- ✓ Session authentication and Django Admin
+- ✓ Role-based access control — five system roles, permissions resolved
+      through roles, `is_staff`/`is_superuser` derived rather than hand-set
+- ✓ Platform management interface at `/manage/` that never exposes Django Admin
+- ✓ Session authentication
 - ✓ Health endpoint reporting database and Redis state
 - ✓ Request-ID correlation across responses and logs
 - ✓ Docker Compose deployment with a private service network
@@ -62,7 +72,6 @@ Nothing below is marked available unless it exists in this repository today.
 - ○ Next.js web UI (`ansible-web`) — Module 2
 - ○ Ansible Runner execution engine — Module 3
 - ○ Infrastructure inventory (`InfrastructureAsset`)
-- ○ RBAC, roles and granular permissions
 - ○ Credential storage with envelope encryption
 - ○ Job scheduling, live logs and run history
 - ○ Git-backed playbook repositories
@@ -94,8 +103,25 @@ When it finishes:
 | Django Admin | <http://localhost:47420/admin/> |
 | Health | <http://localhost:47420/api/v1/health/> |
 
-Sign in as `admin`. The generated password is printed once by the bootstrap
-script and stored in `.env` as `INITIAL_ADMIN_PASSWORD`.
+### Accounts
+
+Two accounts are created, with deliberately different reach:
+
+| Account | Role | Platform `/manage/` | Django Admin |
+|---|---|---|---|
+| `admin` | Administrator | ✅ | ✅ |
+| `ansible` | Operator | ✅ | 🚫 denied |
+
+Passwords are generated during installation — you never invent one. Read them
+with:
+
+```bash
+grep INITIAL_ .env
+```
+
+The platform account **cannot reach Django Admin at all**: its role does not
+grant `is_staff`, so `/admin/` redirects it away. That is enforced by tests, not
+by hiding a link.
 
 PostgreSQL and Redis are **not** published to the host — they are reachable only
 from inside the `ansible-network` bridge.
@@ -121,7 +147,7 @@ docker compose down         # stop, keeping data
 ```text
 .
 ├── core/                  Django project: settings, URLs, WSGI/ASGI, Celery, health
-├── authentication/        Authentication (session auth today; RBAC planned)
+├── authentication/        Roles, RBAC backend, management interface
 ├── commun/                Shared abstract base models (UUID, timestamps)
 ├── audit/                 Audit trail, request-ID middleware, secret redaction
 ├── security/              Security event records
@@ -162,6 +188,10 @@ Every choice is recorded with its reasoning in [docs/adr/](docs/adr/).
 - PostgreSQL and Redis are not exposed outside the Docker network.
 - Containers run as an unprivileged user.
 - DRF endpoints require authentication and are throttled by default.
+- Authorisation comes from roles; `is_staff` and `is_superuser` are derived,
+  never set by hand.
+- Django Admin is an operator backdoor, not product surface — no platform page
+  links to it.
 - The health endpoint returns booleans only — never hostnames or credentials.
 
 Found a vulnerability? **Do not open a public issue.** Follow
@@ -179,6 +209,7 @@ Found a vulnerability? **Do not open a public issue.** Follow
 | [docs/architecture.md](docs/architecture.md) | How the pieces fit together |
 | [docs/development.md](docs/development.md) | Working on the code |
 | [docs/docker.md](docs/docker.md) | Container operations |
+| [docs/interface.md](docs/interface.md) | The management interface, with screenshots |
 | [docs/security.md](docs/security.md) | Security model and posture |
 | [docs/audit.md](docs/audit.md) | The audit trail |
 | [docs/authentication.md](docs/authentication.md) | Authentication, today and planned |
