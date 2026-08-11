@@ -8,6 +8,10 @@
   <a href="{% url 'manage:servers' %}" class="btn btn--ghost" style="text-decoration:none">← All servers</a>
   {% if perms.infrastructure.change_server %}
     <a href="{% url 'manage:server-edit' server.uuid %}" class="btn" style="width:auto;text-decoration:none">Edit this server</a>
+    <form method="post" action="{% url 'jobs:server-test' server.uuid %}" style="margin:0">
+      {% csrf_token %}
+      <button type="submit" class="btn btn--ghost">Test connection</button>
+    </form>
   {% endif %}
   {% if perms.infrastructure.delete_server %}
     <a href="{% url 'manage:server-delete' server.uuid %}" class="btn btn--ghost"

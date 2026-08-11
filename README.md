@@ -66,6 +66,12 @@ Nothing below is marked available unless it exists in this repository today.
 - ✓ SSH, WinRM and (planned) agent connection methods across Linux, Windows,
       AIX, Solaris, HP-UX, BSD, macOS and network devices
 - ✓ Encrypted credential storage — write-only secrets that can never be read back
+- ✓ Playbook execution through Ansible Runner on Celery, with check mode,
+      --limit, tags and extra vars; every run recorded as a Job with its
+      play recap, exit code and output
+- ✓ Connection test per server, using Ansible's own ping / win_ping, updating
+      the server's status and last successful connection
+- ✓ Playbook editing at `/manage/playbooks/`, validated before it is written
 - ✓ Standard Ansible YAML inventory generated from the registered servers,
       viewable and downloadable at `/manage/inventory/` or written to a file
       with `python manage.py generate_inventory`
@@ -82,7 +88,6 @@ Nothing below is marked available unless it exists in this repository today.
 ### Planned
 
 - ○ Next.js web UI (`ansible-web`) — Module 2
-- ○ Ansible Runner execution engine — Module 3
 - ○ Infrastructure inventory (`InfrastructureAsset`)
 - ○ Credential storage with envelope encryption
 - ○ Job scheduling, live logs and run history
@@ -166,6 +171,8 @@ docker compose down         # stop, keeping data
 ├── ipintel/               IP intelligence models and provider abstraction
 ├── infrastructure/        Servers, clients, groups, environments
 ├── inventory/             Ansible inventory generation from the registered servers
+├── automation/            Workspace, playbook editor and the Ansible Runner engine
+├── jobs/                  Job model, execution tasks and run history
 ├── credentials/           Encrypted SSH / become credentials
 ├── settings_platform/     Database-backed operational settings
 ├── tests/                 Test suite (runs against real PostgreSQL)

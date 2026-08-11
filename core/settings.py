@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "credentials",
     "inventory",
     "automation",
+    "jobs",
 ]
 
 MIDDLEWARE = [

@@ -54,6 +54,7 @@ PLATFORM_APPS = [
     "infrastructure",
     "credentials",
     "automation",
+    "jobs",
 ]
 
 
