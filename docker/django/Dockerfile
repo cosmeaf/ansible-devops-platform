@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.12-slim AS base
+FROM python:3.14-slim AS base
 
 # PYTHONDONTWRITEBYTECODE keeps the image free of .pyc for a read-only-friendly
 # filesystem; PYTHONUNBUFFERED makes container logs appear in real time.
