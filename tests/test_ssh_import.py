@@ -181,3 +181,149 @@ def test_a_missing_config_is_an_error(tmp_path):
 
     with pytest.raises(CommandError):
         call_command("import_ssh_config", path=str(tmp_path / "nope"))
+
+
+BANNERED = """
+################################
+# AVALIZA
+################################
+# IdentitiesOnly keeps the agent from offering the other keys first.
+Host avaliza-srv-01
+    HostName 198.51.100.20
+    User root
+
+Host avaliza.app
+    HostName 198.51.100.21
+    User deploy
+
+################################
+# S2DIGITAL
+################################
+Host monitor
+    HostName 198.51.100.30
+    User ops
+
+#### VELOMA
+Host veloma-srv-01
+    HostName 198.51.100.40
+    User root
+"""
+
+
+def test_banner_comments_become_sections():
+    hosts = {h.name: h for h in parse(BANNERED)}
+
+    assert hosts["avaliza-srv-01"].section == "AVALIZA"
+    assert hosts["avaliza.app"].section == "AVALIZA"
+    assert hosts["monitor"].section == "S2DIGITAL"
+
+
+def test_a_comment_explaining_a_directive_is_not_a_section():
+    """Only banners are sections; prose under one must not replace it."""
+    hosts = {h.name: h for h in parse(BANNERED)}
+
+    assert hosts["avaliza-srv-01"].section == "AVALIZA"
+
+
+def test_a_title_written_on_the_rule_itself_is_a_section():
+    hosts = {h.name: h for h in parse(BANNERED)}
+
+    assert hosts["veloma-srv-01"].section == "VELOMA"
+
+
+def test_a_host_before_any_banner_has_no_section():
+    hosts = {h.name: h for h in parse(SAMPLE)}
+
+    assert hosts["web01"].section == ""
+
+
+def test_shouted_sections_read_as_client_names():
+    hosts = {h.name: h for h in parse(BANNERED)}
+
+    assert hosts["monitor"].client_name == "S2Digital"
+    assert hosts["avaliza-srv-01"].client_name == "Avaliza"
+
+
+@pytest.mark.django_db
+def test_each_section_becomes_a_client(tmp_path):
+    config = tmp_path / "config"
+    config.write_text(BANNERED)
+
+    call_command("import_ssh_config", path=str(config))
+
+    assert Server.objects.get(name="avaliza-srv-01").client.name == "Avaliza"
+    assert Server.objects.get(name="avaliza.app").client.name == "Avaliza"
+    assert Server.objects.get(name="monitor").client.name == "S2Digital"
+
+
+@pytest.mark.django_db
+def test_an_explicit_client_overrides_the_sections(tmp_path):
+    config = tmp_path / "config"
+    config.write_text(BANNERED)
+
+    call_command("import_ssh_config", path=str(config), client="Acme")
+
+    assert {s.client.name for s in Server.objects.all()} == {"Acme"}
+
+
+@pytest.mark.django_db
+def test_section_clients_can_be_turned_off(tmp_path):
+    config = tmp_path / "config"
+    config.write_text(BANNERED)
+
+    call_command("import_ssh_config", path=str(config), section_clients=False)
+
+    assert Server.objects.get(name="monitor").client is None
+
+
+@pytest.mark.django_db
+def test_update_existing_backfills_a_server_imported_without_a_client(tmp_path):
+    config = tmp_path / "config"
+    config.write_text(BANNERED)
+    call_command("import_ssh_config", path=str(config), section_clients=False)
+
+    call_command("import_ssh_config", path=str(config), update_existing=True)
+
+    assert Server.objects.get(name="monitor").client.name == "S2Digital"
+    assert Server.objects.count() == 4
+
+
+@pytest.mark.django_db
+def test_update_existing_keeps_a_client_someone_already_chose(tmp_path):
+    config = tmp_path / "config"
+    config.write_text(BANNERED)
+    call_command("import_ssh_config", path=str(config), client="Acme")
+
+    call_command("import_ssh_config", path=str(config), update_existing=True)
+
+    assert Server.objects.get(name="monitor").client.name == "Acme"
+
+
+@pytest.mark.django_db
+def test_update_existing_adds_missing_groups_and_environment(tmp_path):
+    config = tmp_path / "config"
+    config.write_text(BANNERED)
+    call_command("import_ssh_config", path=str(config))
+
+    call_command(
+        "import_ssh_config",
+        path=str(config),
+        update_existing=True,
+        environment="Production",
+        group=["imported"],
+    )
+
+    server = Server.objects.get(name="monitor")
+    assert server.environment.name == "Production"
+    assert server.groups.filter(name="imported").exists()
+
+
+@pytest.mark.django_db
+def test_a_dry_run_update_writes_nothing(tmp_path):
+    config = tmp_path / "config"
+    config.write_text(BANNERED)
+    call_command("import_ssh_config", path=str(config), section_clients=False)
+
+    call_command("import_ssh_config", path=str(config), update_existing=True, dry_run=True)
+
+    assert Server.objects.get(name="monitor").client is None
