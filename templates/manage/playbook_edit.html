@@ -1,0 +1,86 @@
+{% extends "manage/_shell.html" %}
+{% block title %}{{ title }} — Ansible DevOps Platform{% endblock %}
+{% block heading %}{{ title }}{% endblock %}
+{% block subheading %}Validated before it is written. A file Ansible cannot load is never saved.{% endblock %}
+
+{% block content %}
+<form method="post" class="card" style="max-width:none">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+  <div class="alert" role="alert">
+    <span>{{ form.non_field_errors|join:" " }}</span>
+  </div>
+  {% endif %}
+
+  <div class="field">
+    <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+    {{ form.name }}
+    <div class="field__help">{{ form.name.help_text }}</div>
+    {% if form.name.errors %}<div class="field__error">{{ form.name.errors|join:" " }}</div>{% endif %}
+  </div>
+
+  <div class="field">
+    <label for="{{ form.content.id_for_label }}">YAML</label>
+    {% if form.content.errors %}
+    <div class="alert" role="alert">
+      <div>
+        <b>This file was not saved:</b>
+        <ul style="margin:6px 0 0 18px;padding:0">
+          {% for problem in form.content.errors %}<li>{{ problem }}</li>{% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+    <textarea id="{{ form.content.id_for_label }}" name="{{ form.content.html_name }}"
+              class="editor mono" spellcheck="false" autocomplete="off"
+              rows="26">{{ form.content.value|default:"" }}</textarea>
+    <div class="field__help">
+      Tab indents by two spaces, as YAML wants. Ctrl/Cmd+S saves.
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-top:18px">
+    <button type="submit" class="btn" style="width:auto">Save playbook</button>
+    <a href="{% url 'automation:playbooks' %}" class="btn btn--ghost" style="text-decoration:none">Cancel</a>
+    {% if name and perms.automation.delete_playbook %}
+      <a href="{% url 'automation:playbook-delete' name %}" class="btn btn--ghost is-danger"
+         style="margin-left:auto;text-decoration:none;color:var(--danger)">Delete</a>
+    {% endif %}
+  </div>
+</form>
+
+<style>
+  .editor {
+    width: 100%; box-sizing: border-box;
+    padding: 12px 14px;
+    font-family: var(--mono); font-size: 13px; line-height: 1.6;
+    color: var(--text); background: var(--bg);
+    border: 1px solid var(--border); border-radius: 8px;
+    resize: vertical; tab-size: 2;
+  }
+  .editor:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+</style>
+
+<script>
+  // A textarea that eats Tab is useless for YAML, and a browser that navigates
+  // away on Tab is worse. Two spaces, in place, like every editor does.
+  (function () {
+    const editor = document.querySelector('.editor');
+    if (!editor) return;
+
+    editor.addEventListener('keydown', function (event) {
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        editor.setRangeText('  ', start, end, 'end');
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key === 's') {
+        event.preventDefault();
+        editor.form.requestSubmit();
+      }
+    });
+  })();
+</script>
+{% endblock %}
