@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Environment, Server, ServerGroup
+from .models import Client, Environment, Server, ServerGroup
 
 
 @admin.register(Environment)
@@ -8,6 +8,19 @@ class EnvironmentAdmin(admin.ModelAdmin):
     list_display = ("name", "slug", "active", "require_check_mode", "server_count")
     list_filter = ("active", "require_check_mode")
     search_fields = ("name", "slug", "description")
+    prepopulated_fields = {"slug": ("name",)}
+    readonly_fields = ("uuid", "created_at", "updated_at")
+
+    @admin.display(description="servers")
+    def server_count(self, obj):
+        return obj.servers.count()
+
+
+@admin.register(Client)
+class ClientAdmin(admin.ModelAdmin):
+    list_display = ("name", "slug", "contact_email", "active", "server_count")
+    list_filter = ("active",)
+    search_fields = ("name", "slug", "description", "contact_email")
     prepopulated_fields = {"slug": ("name",)}
     readonly_fields = ("uuid", "created_at", "updated_at")
 
@@ -30,15 +43,24 @@ class ServerAdmin(admin.ModelAdmin):
         "name",
         "ansible_host",
         "ssh_port",
-        "ansible_user",
+        "connection_method",
+        "operating_system",
+        "client",
         "environment",
         "status",
-        "active",
     )
-    list_filter = ("status", "environment", "operating_system", "active", "groups")
+    list_filter = (
+        "status",
+        "connection_method",
+        "operating_system",
+        "environment",
+        "client",
+        "active",
+        "groups",
+    )
     search_fields = ("name", "hostname", "primary_ip", "description")
     filter_horizontal = ("groups",)
-    autocomplete_fields = ("environment",)
+    autocomplete_fields = ("environment", "client", "credential")
     readonly_fields = (
         "uuid",
         "status",

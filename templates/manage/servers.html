@@ -4,12 +4,24 @@
 {% block subheading %}Hosts Ansible manages. Each becomes an inventory entry.{% endblock %}
 
 {% block content %}
+{% if perms.infrastructure.add_server %}
+<div class="toolbar">
+  <a href="{% url 'manage:server-create' %}" class="btn" style="width:auto;text-decoration:none">Register a server</a>
+</div>
+{% endif %}
+
 <form class="toolbar" method="get">
   <input type="search" name="q" value="{{ q }}" placeholder="Filter by name…">
   <select name="environment">
     <option value="">All environments</option>
     {% for e in environments %}
       <option value="{{ e.slug }}" {% if e.slug == selected_environment %}selected{% endif %}>{{ e.name }}</option>
+    {% endfor %}
+  </select>
+  <select name="client">
+    <option value="">All clients</option>
+    {% for c in clients %}
+      <option value="{{ c.slug }}" {% if c.slug == selected_client %}selected{% endif %}>{{ c.name }}</option>
     {% endfor %}
   </select>
   <select name="status">
@@ -27,14 +39,16 @@
 <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>Name</th><th>Address</th><th>User</th><th>Environment</th><th>Groups</th><th>Status</th><th>Last tested</th></tr>
+      <tr><th>Name</th><th>Address</th><th>Via</th><th>OS</th><th>Client</th><th>Environment</th><th>Groups</th><th>Status</th></tr>
     </thead>
     <tbody>
       {% for s in page %}
       <tr>
         <td><a href="{% url 'manage:server-detail' s.uuid %}"><b>{{ s.name }}</b></a></td>
         <td class="mono muted">{{ s.ansible_host }}:{{ s.ssh_port }}</td>
-        <td class="mono muted">{{ s.ansible_user }}</td>
+        <td><span class="tag">{{ s.get_connection_method_display }}</span></td>
+        <td class="muted">{{ s.get_operating_system_display }}</td>
+        <td>{% if s.client %}<span class="tag">{{ s.client.name }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
         <td>{% if s.environment %}<span class="tag tag--info">{{ s.environment.name }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
         <td>{% for g in s.groups.all %}<span class="tag">{{ g.name }}</span>{% empty %}<span class="muted">—</span>{% endfor %}</td>
         <td>
@@ -43,10 +57,9 @@
           {% elif s.status == "ERROR" %}<span class="tag tag--err">Error</span>
           {% else %}<span class="tag">Unknown</span>{% endif %}
         </td>
-        <td class="mono muted">{{ s.last_connection_test|date:"Y-m-d H:i"|default:"never" }}</td>
       </tr>
       {% empty %}
-      <tr><td colspan="7" class="empty">No servers match.</td></tr>
+      <tr><td colspan="8" class="empty">No servers match.</td></tr>
       {% endfor %}
     </tbody>
   </table>

@@ -60,8 +60,14 @@ Nothing below is marked available unless it exists in this repository today.
 - ✓ Database-backed platform settings with secret masking
 - ✓ Role-based access control — five system roles, permissions resolved
       through roles, `is_staff`/`is_superuser` derived rather than hand-set
-- ✓ Ansible infrastructure management at `/manage/` — servers, groups and
-      environments, mapping directly onto a standard Ansible inventory
+- ✓ Ansible infrastructure management at `/manage/` — register servers from the
+      web or the API, with clients, groups and environments, mapping directly
+      onto a standard Ansible inventory
+- ✓ SSH, WinRM and (planned) agent connection methods across Linux, Windows,
+      AIX, Solaris, HP-UX, BSD, macOS and network devices
+- ✓ Encrypted credential storage — write-only secrets that can never be read back
+- ✓ REST API at `/api/v1/` for servers, clients, groups, environments and
+      credentials, with filtering, search and audit on every write
 - ✓ Session authentication
 - ✓ Health endpoint reporting database and Redis state
 - ✓ Request-ID correlation across responses and logs
@@ -153,7 +159,8 @@ docker compose down         # stop, keeping data
 ├── audit/                 Audit trail, request-ID middleware, secret redaction
 ├── security/              Security event records
 ├── ipintel/               IP intelligence models and provider abstraction
-├── infrastructure/        Servers, groups, environments — what Ansible manages
+├── infrastructure/        Servers, clients, groups, environments
+├── credentials/           Encrypted SSH / become credentials
 ├── settings_platform/     Database-backed operational settings
 ├── tests/                 Test suite (runs against real PostgreSQL)
 ├── templates/             Minimal server-rendered pages
