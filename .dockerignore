@@ -1,0 +1,45 @@
+# Secrets — never bake into an image layer
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# VCS & agent tooling
+.git/
+.github/
+.gitignore
+.tokensave/
+.claude/
+prompt.md
+
+# Python build/test artifacts
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Django runtime artifacts
+staticfiles/
+media/
+*.log
+celerybeat-schedule*
+db.sqlite3
+
+# Docs & meta (not needed at runtime)
+docs/
+*.md
+!README.md
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store

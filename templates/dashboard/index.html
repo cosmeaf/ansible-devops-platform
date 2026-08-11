@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ansible DevOps Platform</title>
+</head>
+<body>
+  <main>
+    <h1>Ansible DevOps Platform</h1>
+    <p>Module 1 — Core Platform</p>
+    {% if user.is_authenticated %}
+      <p>Signed in as {{ user.username }}.</p>
+      <ul>
+        <li><a href="/admin/">Django Admin</a></li>
+        <li><a href="/api/v1/health/">Health</a></li>
+      </ul>
+      <form method="post" action="/accounts/logout/">{% csrf_token %}
+        <button type="submit">Sign out</button>
+      </form>
+    {% else %}
+      <p><a href="/accounts/login/">Sign in</a></p>
+    {% endif %}
+  </main>
+</body>
+</html>

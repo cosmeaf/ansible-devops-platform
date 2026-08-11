@@ -1,0 +1,18 @@
+# Local development override.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d \
+#       ansible-postgres ansible-redis
+#
+# Publishes PostgreSQL and Redis on loopback only, so a Django process running
+# on the host can reach them. Never apply this file to a deployed environment:
+# the base docker-compose.yml deliberately keeps both services unreachable
+# from outside the `ansible-network` bridge.
+
+services:
+  ansible-postgres:
+    ports:
+      - "127.0.0.1:${POSTGRES_DEV_PORT:-47432}:5432"
+
+  ansible-redis:
+    ports:
+      - "127.0.0.1:${REDIS_DEV_PORT:-47379}:6379"

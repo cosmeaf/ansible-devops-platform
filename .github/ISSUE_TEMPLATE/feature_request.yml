@@ -1,0 +1,92 @@
+name: ✨ Feature request
+description: Suggest a capability, with a concrete use case
+title: "[Feature]: "
+labels: ["type:feature", "status:needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please check [ROADMAP.md](https://github.com/cosmeaf/ansible-devops-platform/blob/main/ROADMAP.md) —
+        it may already be planned.
+
+        For an idea that is still taking shape, start in
+        [Discussions → Ideas](https://github.com/cosmeaf/ansible-devops-platform/discussions/categories/ideas).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you unable to do today? Describe the problem, not your preferred solution.
+      placeholder: "When I ..., I cannot ... because ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What should the platform do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Use case
+      description: A concrete situation where you would use this. Real examples carry far more weight than hypotheticals.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What else could solve this? What do you do instead today?
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Backend / API
+        - Frontend (planned)
+        - Ansible execution (planned)
+        - Agent (planned)
+        - Docker / deployment
+        - Database
+        - Security
+        - Audit
+        - Authentication / RBAC
+        - Documentation
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Does this belong in the platform's scope?
+      description: |
+        The project is an open-source, self-hosted DevOps automation platform built **around** Ansible.
+
+        Permanently out of scope: replacing Ansible with a proprietary format, vendor lock-in,
+        a hosted SaaS offering, and making the Go agent mandatory.
+      options:
+        - "Yes — it fits the stated scope"
+        - "I think so, but I would like it discussed"
+        - "I am not sure"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Would you be willing to work on this?
+      options:
+        - label: I would be willing to open a pull request
+        - label: I would be willing to help test it
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Mockups, links to how other tools solve it, anything relevant.

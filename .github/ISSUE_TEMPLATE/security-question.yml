@@ -1,0 +1,77 @@
+name: 🛡️ Security question
+description: Ask about the security model — NOT for reporting vulnerabilities
+title: "[Security question]: "
+labels: ["type:security", "status:needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ⛔ Are you reporting a vulnerability?
+
+        **Stop. Do not use this form.**
+
+        A public issue tells every deployment's attacker what you found, before a
+        fix exists. Report it privately instead:
+
+        👉 **[Report a vulnerability privately](https://github.com/cosmeaf/ansible-devops-platform/security/advisories/new)**
+
+        See [SECURITY.md](https://github.com/cosmeaf/ansible-devops-platform/blob/main/SECURITY.md).
+
+        ---
+
+        This form is for **questions about the security model** — how something
+        works, whether a control exists, how to configure a deployment safely.
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirm
+      options:
+        - label: This is a question, NOT a vulnerability report
+          required: true
+        - label: I understand that a vulnerability must be reported privately
+          required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What would you like to know?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Secret management (.env, generated credentials)
+        - Authentication and sessions
+        - Authorisation / RBAC
+        - Audit trail and redaction
+        - Network exposure and Docker
+        - Container hardening
+        - Transport security (TLS, headers, cookies)
+        - Dependencies and supply chain
+        - Deployment guidance
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: read
+    attributes:
+      label: Have you read these?
+      options:
+        - label: "[docs/security.md](https://github.com/cosmeaf/ansible-devops-platform/blob/main/docs/security.md) — including the 'What is NOT implemented' section"
+        - label: "[SECURITY.md](https://github.com/cosmeaf/ansible-devops-platform/blob/main/SECURITY.md)"
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: |
+        Your deployment scenario, threat model, or compliance requirement.
+
+        ⚠️ Do not include secrets, internal hostnames or network topology you
+        would not want public.

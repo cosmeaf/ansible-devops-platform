@@ -1,0 +1,82 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docker/**"
+      - "requirements.txt"
+      - "docker-compose.yml"
+      - ".dockerignore"
+      - ".github/workflows/docker-build.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "docker/**"
+      - "requirements.txt"
+      - "docker-compose.yml"
+      - ".dockerignore"
+      - ".github/workflows/docker-build.yml"
+
+concurrency:
+  group: docker-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and smoke-test the image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate the Compose file
+        run: docker compose config -q
+        env:
+          POSTGRES_DB: ci
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Build only. Nothing is published from a pull request — images are
+      # pushed by the release workflow, from a tag.
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/django/Dockerfile
+          push: false
+          load: true
+          tags: ansible-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify the image runs as a non-root user
+        run: |
+          uid=$(docker run --rm --entrypoint id ansible-api:ci -u)
+          echo "container uid: $uid"
+          if [ "$uid" = "0" ]; then
+            echo "::error::The image runs as root. It must run unprivileged."
+            exit 1
+          fi
+
+      - name: Verify no .env was baked into the image
+        run: |
+          if docker run --rm --entrypoint sh ansible-api:ci -c 'test -f /app/.env'; then
+            echo "::error::/app/.env exists in the image. Check .dockerignore."
+            exit 1
+          fi
+          echo "No .env in the image."
+
+      - name: Verify Django starts inside the image
+        run: |
+          docker run --rm \
+            -e DJANGO_SECRET_KEY=ci-only-key \
+            -e POSTGRES_DB=ci -e POSTGRES_USER=ci \
+            -e POSTGRES_PASSWORD=ci -e POSTGRES_HOST=localhost \
+            --entrypoint python \
+            ansible-api:ci manage.py check

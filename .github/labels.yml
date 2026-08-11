@@ -1,0 +1,88 @@
+# Canonical label set.
+#
+# Kept small on purpose: a label nobody filters by is noise. Every label here
+# answers a question a maintainer or contributor actually asks.
+#
+# Apply with a label-sync action or `gh label create`.
+
+# --- Type: what kind of change is this? ---
+- name: "type:bug"
+  color: "d73a4a"
+  description: Something is broken
+- name: "type:feature"
+  color: "0e8a16"
+  description: New capability
+- name: "type:documentation"
+  color: "0075ca"
+  description: Documentation only
+- name: "type:security"
+  color: "b60205"
+  description: Security-related
+- name: "type:refactor"
+  color: "c5def5"
+  description: Internal change, no behaviour change
+- name: "type:test"
+  color: "bfd4f2"
+  description: Tests
+
+# --- Component: which part of the system? ---
+- name: "component:backend"
+  color: "1d76db"
+  description: Django, DRF, Celery
+- name: "component:frontend"
+  color: "1d76db"
+  description: Next.js web UI (planned)
+- name: "component:ansible"
+  color: "1d76db"
+  description: Ansible execution (planned)
+- name: "component:agent"
+  color: "1d76db"
+  description: Go agent (planned)
+- name: "component:docker"
+  color: "1d76db"
+  description: Containers and Compose
+- name: "component:database"
+  color: "1d76db"
+  description: PostgreSQL, models, migrations
+- name: "component:security"
+  color: "1d76db"
+  description: Audit, authentication, hardening
+- name: "component:documentation"
+  color: "1d76db"
+  description: Docs and ADRs
+
+# --- Priority: how urgent? ---
+- name: "priority:critical"
+  color: "b60205"
+  description: Data loss, security, or the platform will not start
+- name: "priority:high"
+  color: "d93f0b"
+  description: Major functionality affected
+- name: "priority:medium"
+  color: "fbca04"
+  description: Should be addressed
+- name: "priority:low"
+  color: "0e8a16"
+  description: Nice to have
+
+# --- Status: where is it in the process? ---
+- name: "status:needs-triage"
+  color: "ededed"
+  description: Not yet reviewed by a maintainer
+- name: "status:blocked"
+  color: "5319e7"
+  description: Waiting on something else
+- name: "status:needs-review"
+  color: "fbca04"
+  description: Awaiting review
+- name: "status:ready"
+  color: "0e8a16"
+  description: Triaged and ready to be worked on
+
+# --- Community ---
+- name: "good-first-issue"
+  color: "7057ff"
+  description: Well scoped for a first contribution. Never applied to security work.
+- name: "help-wanted"
+  color: "008672"
+  description: Maintainers would welcome help here
