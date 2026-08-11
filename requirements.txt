@@ -8,4 +8,5 @@ django-cors-headers>=4.6,<5
 django-filter>=24,<26
 python-decouple>=3.8,<4
 cryptography>=50.0.0,<51
+PyYAML>=6.0,<7
 gunicorn>=23,<24

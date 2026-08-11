@@ -1,0 +1,47 @@
+{% extends "manage/_shell.html" %}
+{% block title %}Inventory — Ansible DevOps Platform{% endblock %}
+{% block heading %}Inventory{% endblock %}
+{% block subheading %}The registered servers, as a standard Ansible YAML inventory.{% endblock %}
+
+{% block content %}
+<form class="toolbar" method="get">
+  <select name="environment">
+    <option value="">All environments</option>
+    {% for e in environments %}
+      <option value="{{ e.slug }}" {% if e.slug == selected_environment %}selected{% endif %}>{{ e.name }}</option>
+    {% endfor %}
+  </select>
+  <select name="client">
+    <option value="">All clients</option>
+    {% for c in clients %}
+      <option value="{{ c.slug }}" {% if c.slug == selected_client %}selected{% endif %}>{{ c.name }}</option>
+    {% endfor %}
+  </select>
+  <label class="muted" style="display:flex;align-items:center;gap:6px">
+    <input type="checkbox" name="inactive" value="1" {% if include_inactive %}checked{% endif %}> Include inactive
+  </label>
+  <button type="submit" class="btn btn--ghost">Filter</button>
+  <a href="?{{ query }}{% if query %}&{% endif %}download=1" class="btn" style="width:auto;text-decoration:none">Download hosts.yml</a>
+</form>
+
+<p class="muted" style="font-size:12.5px">
+  {{ host_count }} host{{ host_count|pluralize }} in {{ group_count }} group{{ group_count|pluralize }}.
+  Environments appear as <span class="mono">env_*</span> groups and clients as
+  <span class="mono">client_*</span>, so either can be used with <span class="mono">--limit</span>.
+</p>
+
+<div class="table-wrap" style="padding:14px">
+  <div style="font-size:12.5px;font-weight:600;margin-bottom:8px">Group tree</div>
+  <pre class="mono" style="margin:0;overflow:auto;font-size:12.5px;line-height:1.5">{{ graph }}</pre>
+</div>
+
+<div class="table-wrap" style="padding:14px;margin-top:14px">
+  <div style="font-size:12.5px;font-weight:600;margin-bottom:8px">hosts.yml</div>
+  <pre class="mono" style="margin:0;overflow:auto;font-size:12.5px;line-height:1.5">{{ yaml }}</pre>
+</div>
+
+<p class="muted" style="font-size:12.5px;margin-top:14px">
+  Save the file and it runs anywhere Ansible does:
+  <span class="mono">ansible-inventory -i hosts.yml --graph</span>
+</p>
+{% endblock %}

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "settings_platform",
     "infrastructure",
     "credentials",
+    "inventory",
 ]
 
 MIDDLEWARE = [
