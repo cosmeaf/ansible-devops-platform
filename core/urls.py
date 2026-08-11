@@ -1,16 +1,12 @@
 from django.contrib import admin
 from django.urls import include, path
-from django.views.generic import TemplateView
 
-from .views import health
+from .views import dashboard, health
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),
+    path("manage/", include("authentication.urls")),
     path("api/v1/health/", health, name="health"),
-    path(
-        "",
-        TemplateView.as_view(template_name="dashboard/index.html"),
-        name="dashboard",
-    ),
+    path("", dashboard, name="dashboard"),
 ]

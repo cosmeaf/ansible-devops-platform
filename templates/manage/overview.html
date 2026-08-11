@@ -1,0 +1,71 @@
+{% extends "manage/_shell.html" %}
+{% block title %}Overview — Ansible DevOps Platform{% endblock %}
+{% block heading %}Overview{% endblock %}
+{% block subheading %}Platform state and recent activity{% endblock %}
+
+{% block content %}
+<div class="grid">
+  <div class="tile">
+    <span class="tile__label">Audit events</span>
+    <div class="tile__value">{{ counts.audit }}</div>
+    <span class="tile__hint">Recorded actions</span>
+  </div>
+  <div class="tile">
+    <span class="tile__label">Security events</span>
+    <div class="tile__value">{{ counts.security }}</div>
+    <span class="tile__hint">Logins, policy, anomalies</span>
+  </div>
+  <div class="tile">
+    <span class="tile__label">Known addresses</span>
+    <div class="tile__value">{{ counts.ipintel }}</div>
+    <span class="tile__hint">IP intelligence records</span>
+  </div>
+  <div class="tile">
+    <span class="tile__label">Users</span>
+    <div class="tile__value">{{ counts.users }}</div>
+    <span class="tile__hint">{{ counts.roles }} role{{ counts.roles|pluralize }} defined</span>
+  </div>
+</div>
+
+<h2 class="section-title">Your roles</h2>
+<div class="table-wrap" style="margin-bottom:26px">
+  <table>
+    <thead><tr><th>Role</th><th>Description</th><th>Admin access</th></tr></thead>
+    <tbody>
+      {% for role in my_roles %}
+      <tr>
+        <td><span class="tag tag--info">{{ role.name }}</span></td>
+        <td class="muted">{{ role.description }}</td>
+        <td>{% if role.grants_admin_access %}<span class="tag tag--warn">Yes</span>{% else %}<span class="tag">No</span>{% endif %}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" class="empty">No roles assigned. Ask an administrator for access.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2 class="section-title">Recent activity</h2>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>When</th><th>Actor</th><th>Module</th><th>Action</th><th>Result</th></tr></thead>
+    <tbody>
+      {% for e in recent %}
+      <tr>
+        <td class="mono">{{ e.created_at|date:"Y-m-d H:i" }}</td>
+        <td>{{ e.username_snapshot|default:"—" }}</td>
+        <td class="mono">{{ e.module }}</td>
+        <td><span class="tag">{{ e.action }}</span></td>
+        <td>
+          {% if e.result == "SUCCESS" %}<span class="tag tag--ok">{{ e.result }}</span>
+          {% elif e.result == "DENIED" %}<span class="tag tag--err">{{ e.result }}</span>
+          {% else %}<span class="tag tag--warn">{{ e.result }}</span>{% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="empty">No activity recorded yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

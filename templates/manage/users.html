@@ -1,0 +1,33 @@
+{% extends "manage/_shell.html" %}
+{% block title %}Users — Ansible DevOps Platform{% endblock %}
+{% block heading %}Users{% endblock %}
+{% block subheading %}Staff and superuser status are derived from roles, never set by hand.{% endblock %}
+
+{% block content %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Username</th><th>Email</th><th>Roles</th><th>Active</th><th>Derived access</th><th>Last login</th></tr></thead>
+    <tbody>
+      {% for u in page %}
+      <tr>
+        <td><b>{{ u.username }}</b></td>
+        <td class="muted">{{ u.email|default:"—" }}</td>
+        <td>
+          {% for ur in u.user_roles.all %}<span class="tag tag--info">{{ ur.role.name }}</span>{% empty %}<span class="muted">none</span>{% endfor %}
+        </td>
+        <td>{% if u.is_active %}<span class="tag tag--ok">Active</span>{% else %}<span class="tag tag--err">Disabled</span>{% endif %}</td>
+        <td>
+          {% if u.is_superuser %}<span class="tag tag--warn">Superuser</span>
+          {% elif u.is_staff %}<span class="tag">Admin access</span>
+          {% else %}<span class="muted">Platform only</span>{% endif %}
+        </td>
+        <td class="mono muted">{{ u.last_login|date:"Y-m-d H:i"|default:"never" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="empty">No users.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "manage/_pager.html" %}
+{% endblock %}

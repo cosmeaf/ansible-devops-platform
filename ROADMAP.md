@@ -18,7 +18,8 @@ Milestones are conceptual releases, each roughly a module.
 - [x] PostgreSQL as primary database
 - [x] Redis broker and cache
 - [x] Celery worker and Celery Beat
-- [x] `authentication` — session authentication, Django Admin
+- [x] `authentication` — session authentication, role-based access control
+- [x] Platform management interface, independent of Django Admin
 - [x] `commun` — shared abstract base models
 - [x] `security` — security event model
 - [x] `ipintel` — provider abstraction, offline classifier

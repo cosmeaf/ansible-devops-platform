@@ -56,6 +56,7 @@ else
   DJANGO_SECRET_KEY="$(openssl rand -base64 48 | tr -d '\n' | tr '/+' '_-')"
   POSTGRES_PASSWORD="$(openssl rand -base64 32 | tr -d '\n' | tr '/+' '_-')"
   INITIAL_ADMIN_PASSWORD="$(openssl rand -base64 24 | tr -d '\n' | tr '/+' '_-')"
+  INITIAL_PLATFORM_PASSWORD="$(openssl rand -base64 24 | tr -d '\n' | tr '/+' '_-')"
   PLATFORM_ENCRYPTION_KEY="$(openssl rand -hex 32)"
 
   umask 077
@@ -78,9 +79,15 @@ POSTGRES_PORT=5432
 REDIS_HOST=ansible-redis
 REDIS_PORT=6379
 
+# Operator account — holds the Administrator role, may open Django Admin.
 INITIAL_ADMIN_USERNAME=admin
 INITIAL_ADMIN_EMAIL=admin@localhost
 INITIAL_ADMIN_PASSWORD=${INITIAL_ADMIN_PASSWORD}
+
+# Platform account — holds the Operator role, never reaches Django Admin.
+INITIAL_PLATFORM_USERNAME=ansible
+INITIAL_PLATFORM_EMAIL=ansible@localhost
+INITIAL_PLATFORM_PASSWORD=${INITIAL_PLATFORM_PASSWORD}
 
 ANSIBLE_API_PORT=47420
 EOF
@@ -114,36 +121,21 @@ docker compose exec -T ansible-api python manage.py migrate --noinput >/dev/null
   || fail "Migrations failed. Check 'docker compose logs ansible-api'."
 ok
 
+step BOOT "System roles"
+docker compose exec -T ansible-api python manage.py seed_roles >/dev/null \
+  || fail "Could not seed the system roles."
+ok
+
 # --------------------------------------------------------------------------
 # Administrator — created once; an existing password is never reset
 # --------------------------------------------------------------------------
 
-step BOOT "Administrator"
-ADMIN_RESULT="$(docker compose exec -T ansible-api python manage.py shell -c '
-import os
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
-username = os.environ.get("INITIAL_ADMIN_USERNAME", "admin")
-email = os.environ.get("INITIAL_ADMIN_EMAIL", "admin@localhost")
-password = os.environ["INITIAL_ADMIN_PASSWORD"]
-
-user, created = User.objects.get_or_create(
-    username=username,
-    defaults={"email": email, "is_staff": True, "is_superuser": True},
-)
-if created:
-    user.set_password(password)
-    user.save()
-    print("CREATED")
-else:
-    print("EXISTS")
-' 2>/dev/null | tr -d '\r\n')" || fail "Could not create the administrator account."
-
-case "$ADMIN_RESULT" in
-  *CREATED*) ok ;;
-  *EXISTS*)  skip "already exists, password unchanged" ;;
-  *)         fail "Unexpected result while creating the administrator." ;;
+step BOOT "Initial accounts"
+ACCOUNTS="$(docker compose exec -T ansible-api python manage.py seed_users 2>/dev/null)" \
+  || fail "Could not create the initial accounts."
+case "$ACCOUNTS" in
+  *created*) ok ;;
+  *)         skip "already exist, passwords unchanged" ;;
 esac
 
 step BOOT "Celery worker"
@@ -188,19 +180,21 @@ echo "============================================================"
 echo " Ansible DevOps Platform is running"
 echo "============================================================"
 echo " URL     : http://localhost:${API_PORT}"
-echo " Admin   : http://localhost:${API_PORT}/admin/"
+echo " Manage  : http://localhost:${API_PORT}/manage/"
 echo " Health  : http://localhost:${API_PORT}/api/v1/health/"
-echo " Username: admin"
+echo
+echo " Accounts:"
+echo "   admin    Administrator role  - platform + Django Admin"
+echo "   ansible  Operator role       - platform only, no Django Admin"
 
 if [ "$ENV_CREATED" -eq 1 ]; then
   echo
-  echo " The initial password was generated for you and stored in .env"
-  echo " as INITIAL_ADMIN_PASSWORD. Read it with:"
+  echo " Passwords were generated for you and stored in .env. Read them with:"
   echo
-  echo "     grep INITIAL_ADMIN_PASSWORD .env"
+  echo "     grep INITIAL_ .env"
   echo
-  echo " Change it after your first sign-in. Never commit .env."
+  echo " Change them after your first sign-in. Never commit .env."
 else
-  echo " Password: unchanged (see INITIAL_ADMIN_PASSWORD in .env)"
+  echo " Passwords: unchanged (see the INITIAL_ entries in .env)"
 fi
 echo "============================================================"

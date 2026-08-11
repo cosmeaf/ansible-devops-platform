@@ -1,18 +1,88 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign in — Ansible DevOps Platform</title>
-</head>
-<body>
-  <main>
-    <h1>Ansible DevOps Platform</h1>
-    {% if form.errors %}<p role="alert">Invalid credentials.</p>{% endif %}
-    <form method="post">{% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit">Sign in</button>
-    </form>
-  </main>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Sign in — Ansible DevOps Platform{% endblock %}
+
+{% block body %}
+<main class="auth">
+  <div class="auth__inner">
+
+    <div class="auth__head">
+      <div class="brand">
+        <svg class="brand__mark" width="34" height="34" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="7" fill="#1f6feb"/>
+          <path d="M16 7l7.5 18h-3.6l-1.5-3.9h-6.9L9.9 25H6.4L16 7zm2.2 11.2L16 12.5l-2.3 5.7h4.5z" fill="#fff"/>
+        </svg>
+        <div style="text-align:left">
+          <div class="brand__name">Ansible DevOps Platform</div>
+          <div class="brand__sub">Module 1 · Core Platform</div>
+        </div>
+      </div>
+      <div>
+        <h1 class="auth__title">Sign in</h1>
+        <p class="auth__lede">Use your platform account to continue.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      {% if form.errors %}
+        <div class="alert" role="alert">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7.25 4.5h1.5v5h-1.5v-5zm0 6.25h1.5v1.5h-1.5v-1.5z"/>
+          </svg>
+          <span>The username or password is incorrect.</span>
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="field">
+          <label for="{{ form.username.id_for_label }}">Username</label>
+          <input type="text"
+                 name="{{ form.username.html_name }}"
+                 id="{{ form.username.id_for_label }}"
+                 value="{{ form.username.value|default:'' }}"
+                 placeholder="admin"
+                 autocomplete="username"
+                 autocapitalize="none"
+                 spellcheck="false"
+                 autofocus
+                 required>
+        </div>
+
+        <div class="field">
+          <label for="{{ form.password.id_for_label }}">Password</label>
+          <input type="password"
+                 name="{{ form.password.html_name }}"
+                 id="{{ form.password.id_for_label }}"
+                 placeholder="••••••••••••"
+                 autocomplete="current-password"
+                 required>
+        </div>
+
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+        <button type="submit" class="btn">
+          Sign in
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8.47 3.47a.75.75 0 011.06 0l4 4a.75.75 0 010 1.06l-4 4a.75.75 0 11-1.06-1.06l2.72-2.72H2.75a.75.75 0 010-1.5h8.44L8.47 4.53a.75.75 0 010-1.06z"/>
+          </svg>
+        </button>
+      </form>
+
+      <div class="note">
+        <strong>First time here?</strong> The default account is
+        <code>admin</code>. Its password was generated during installation —
+        never a value you have to guess. Read it with:
+        <div style="margin-top:7px"><code>grep INITIAL_ADMIN_PASSWORD .env</code></div>
+      </div>
+    </div>
+
+    <p class="auth__foot">
+      Open source · Apache&nbsp;2.0 ·
+      <a href="https://github.com/cosmeaf/ansible-devops-platform">Documentation</a>
+    </p>
+
+  </div>
+</main>
+{% endblock %}
