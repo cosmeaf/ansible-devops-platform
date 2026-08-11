@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed | Accepted | Superseded by [ADR XXXX](xxxx-title.md) | Deprecated
+Proposed | Accepted | Superseded by ADR XXXX (link it) | Deprecated
 
 ## Context
 
