@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Validate the Compose file
         run: docker compose config -q
@@ -40,12 +40,12 @@ jobs:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       # Build only. Nothing is published from a pull request — images are
       # pushed by the release workflow, from a tag.
       - name: Build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/django/Dockerfile
