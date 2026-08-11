@@ -53,6 +53,7 @@ PLATFORM_APPS = [
     "authentication",
     "infrastructure",
     "credentials",
+    "automation",
 ]
 
 

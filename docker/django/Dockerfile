@@ -25,9 +25,12 @@ COPY . .
 
 # Run unprivileged. /app stays root-owned and read-only to the app user;
 # only the writable runtime directory is handed over.
+# The workspace is created here so that the named volume mounted over it
+# inherits this ownership on first use; a volume Docker creates itself lands
+# root-owned and the unprivileged app cannot write a playbook to it.
 RUN useradd --system --create-home --uid 10001 ansible \
- && mkdir -p /app/staticfiles /var/run/ansible \
- && chown -R ansible:ansible /app/staticfiles /var/run/ansible
+ && mkdir -p /app/staticfiles /var/run/ansible /app/workspace/ansible \
+ && chown -R ansible:ansible /app/staticfiles /var/run/ansible /app/workspace
 
 USER ansible
 

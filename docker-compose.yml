@@ -54,6 +54,8 @@ services:
     image: ansible-devops-platform/ansible-api:${PLATFORM_VERSION:-dev}
     container_name: ansible-api
     restart: unless-stopped
+    volumes:
+      - ansible-workspace:/app/workspace
     ports:
       - "${ANSIBLE_API_PORT:-47420}:8000"
     healthcheck:
@@ -71,6 +73,10 @@ services:
     image: ansible-devops-platform/ansible-api:${PLATFORM_VERSION:-dev}
     container_name: ansible-celery
     restart: unless-stopped
+    # The worker runs the playbooks, so it needs the same workspace the editor
+    # writes to — a copy per container would execute yesterday's file.
+    volumes:
+      - ansible-workspace:/app/workspace
     command: ["celery", "-A", "core", "worker", "-l", "INFO", "--concurrency", "2"]
     # CMD-SHELL, not CMD: the exec form gives no shell, so $HOSTNAME would be
     # passed through literally and the node would never be found.
@@ -116,6 +122,8 @@ networks:
     name: ansible-network
 
 volumes:
+  ansible-workspace:
+    name: ansible-workspace
   ansible-postgres-data:
     name: ansible-postgres-data
   ansible-redis-data:

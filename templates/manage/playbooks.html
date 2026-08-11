@@ -1,0 +1,47 @@
+{% extends "manage/_shell.html" %}
+{% block title %}Playbooks — Ansible DevOps Platform{% endblock %}
+{% block heading %}Playbooks{% endblock %}
+{% block subheading %}Standard Ansible YAML, edited here and runnable anywhere.{% endblock %}
+
+{% block content %}
+{% if perms.automation.add_playbook %}
+<div class="toolbar">
+  <a href="{% url 'automation:playbook-create' %}" class="btn" style="width:auto;text-decoration:none">New playbook</a>
+</div>
+{% endif %}
+
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Playbook</th><th>Size</th><th>Last modified</th><th></th></tr></thead>
+    <tbody>
+      {% for p in playbooks %}
+      <tr>
+        <td>
+          {% if perms.automation.change_playbook %}
+            <a href="{% url 'automation:playbook-edit' p.name %}"><b class="mono">{{ p.name }}</b></a>
+          {% else %}
+            <b class="mono">{{ p.name }}</b>
+          {% endif %}
+        </td>
+        <td class="mono muted">{{ p.size }} B</td>
+        <td class="mono muted">{{ p.modified|date:"Y-m-d H:i" }}</td>
+        <td>
+          <div class="row-actions">
+            {% if perms.automation.change_playbook %}<a href="{% url 'automation:playbook-edit' p.name %}">Edit</a>{% endif %}
+            {% if perms.automation.delete_playbook %}<a href="{% url 'automation:playbook-delete' p.name %}" class="is-danger">Delete</a>{% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" class="empty">No playbooks yet. Create one to get started.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p class="muted" style="font-size:12.5px;margin-top:14px">
+  Workspace: <span class="mono">{{ workspace }}/playbooks/</span> — these are real files.
+  Run one by hand with
+  <span class="mono">ansible-playbook -i hosts.yml playbooks/&lt;name&gt;</span>.
+</p>
+{% endblock %}

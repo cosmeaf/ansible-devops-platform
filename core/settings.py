@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "infrastructure",
     "credentials",
     "inventory",
+    "automation",
 ]
 
 MIDDLEWARE = [
@@ -206,6 +207,17 @@ if DEBUG:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
         "rest_framework.renderers.BrowsableAPIRenderer"
     )
+
+# ---------------------------------------------------------------------------
+# Ansible workspace — ordinary files on disk, not rows in a table.
+#
+# Playbooks, roles and variables live here as standard Ansible files so they
+# keep working outside the platform. See ADR 0005.
+# ---------------------------------------------------------------------------
+
+ANSIBLE_WORKSPACE = Path(
+    config("ANSIBLE_WORKSPACE", default=str(BASE_DIR / "workspace" / "ansible"))
+)
 
 # ---------------------------------------------------------------------------
 # CORS — deny by default; the Next.js module will add its own origin.
