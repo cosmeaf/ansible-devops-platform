@@ -1,0 +1,36 @@
+# Code owners are requested for review automatically on any pull request that
+# touches a matching path.
+#
+# The project currently has a single maintainer, so ownership is global. As
+# maintainers join, the per-area entries below are uncommented and assigned —
+# they are listed now so the intended structure is visible, not invented later.
+#
+# Syntax: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything
+*                       @cosmeaf
+
+# Security-sensitive paths always require the project lead's review
+/SECURITY.md            @cosmeaf
+/docs/security.md       @cosmeaf
+/audit/                 @cosmeaf
+/security/              @cosmeaf
+/core/settings.py       @cosmeaf
+/.github/workflows/     @cosmeaf
+/scripts/               @cosmeaf
+/docker/                @cosmeaf
+/docker-compose.yml     @cosmeaf
+
+# Governance and licensing
+/LICENSE                @cosmeaf
+/NOTICE                 @cosmeaf
+/GOVERNANCE.md          @cosmeaf
+/CODE_OF_CONDUCT.md     @cosmeaf
+/docs/adr/              @cosmeaf
+
+# Future areas — assign as maintainers join. Do not add a username here that
+# has not agreed to it.
+# /ansible-web/         @frontend-maintainer
+# /agent/               @agent-maintainer
+# /ansible/             @ansible-maintainer
+# /docs/                @docs-maintainer

@@ -1,0 +1,61 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+*.p12
+*.pfx
+secrets/
+
+# Build artifacts
+BUILD-MANIFEST.json
+VERSION.lock
+
+# Python
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Testing / coverage
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+junit.xml
+
+# Django
+staticfiles/
+media/
+*.log
+celerybeat-schedule*
+db.sqlite3
+
+# Database dumps
+*.sql
+*.dump
+*.sql.gz
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Agent tooling
+.tokensave/
+.claude/
+prompt.md

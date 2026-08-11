@@ -1,0 +1,70 @@
+# Dependency updates.
+#
+# Weekly, with open-PR caps and grouping. Daily unfiltered updates on a project
+# this size produce a stream of pull requests nobody reviews properly, which is
+# worse than fewer, considered ones — security updates are exempt from the
+# grouping and arrive as soon as they exist.
+
+version: 2
+
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "type:refactor"
+      - "component:backend"
+    commit-message:
+      prefix: "build"
+      include: scope
+    groups:
+      django:
+        patterns:
+          - "Django"
+          - "djangorestframework"
+          - "django-*"
+      dev-tooling:
+        patterns:
+          - "pytest*"
+          - "ruff"
+          - "pre-commit"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "type:refactor"
+      - "component:backend"
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directory: /docker/django
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "type:refactor"
+      - "component:docker"
+    commit-message:
+      prefix: "build"
+
+  # Enable when the Next.js module (ansible-web) lands.
+  # - package-ecosystem: npm
+  #   directory: /ansible-web
+  #   schedule:
+  #     interval: weekly

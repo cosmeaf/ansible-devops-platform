@@ -1,0 +1,110 @@
+# Ansible DevOps Platform — Module 1 (Core Platform)
+#
+# PostgreSQL and Redis are deliberately NOT published to the host: they are
+# reachable only from inside the `ansible-network` bridge. Only the API is
+# exposed, on a high port (47420 by default).
+
+x-django-env: &django-env
+  env_file: .env
+  networks: [ansible-network]
+  depends_on:
+    ansible-postgres:
+      condition: service_healthy
+    ansible-redis:
+      condition: service_healthy
+
+services:
+  ansible-postgres:
+    image: postgres:16
+    container_name: ansible-postgres
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ansible-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [ansible-network]
+
+  ansible-redis:
+    image: redis:7
+    container_name: ansible-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "no"]
+    volumes:
+      - ansible-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [ansible-network]
+
+  ansible-api:
+    <<: *django-env
+    build:
+      context: .
+      dockerfile: docker/django/Dockerfile
+    image: ansible-devops-platform/ansible-api:${PLATFORM_VERSION:-dev}
+    container_name: ansible-api
+    restart: unless-stopped
+    ports:
+      - "${ANSIBLE_API_PORT:-47420}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/v1/health/"]
+      interval: 15s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+
+  ansible-celery:
+    <<: *django-env
+    build:
+      context: .
+      dockerfile: docker/django/Dockerfile
+    image: ansible-devops-platform/ansible-api:${PLATFORM_VERSION:-dev}
+    container_name: ansible-celery
+    restart: unless-stopped
+    command: ["celery", "-A", "core", "worker", "-l", "INFO", "--concurrency", "2"]
+    healthcheck:
+      test: ["CMD", "celery", "-A", "core", "inspect", "ping", "-d", "celery@$$HOSTNAME"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+
+  ansible-celery-beat:
+    <<: *django-env
+    build:
+      context: .
+      dockerfile: docker/django/Dockerfile
+    image: ansible-devops-platform/ansible-api:${PLATFORM_VERSION:-dev}
+    container_name: ansible-celery-beat
+    restart: unless-stopped
+    # The schedule file goes to a writable path; /app is not writable by the
+    # unprivileged container user.
+    command:
+      - celery
+      - -A
+      - core
+      - beat
+      - -l
+      - INFO
+      - --schedule
+      - /var/run/ansible/celerybeat-schedule
+
+networks:
+  ansible-network:
+    name: ansible-network
+
+volumes:
+  ansible-postgres-data:
+    name: ansible-postgres-data
+  ansible-redis-data:
+    name: ansible-redis-data

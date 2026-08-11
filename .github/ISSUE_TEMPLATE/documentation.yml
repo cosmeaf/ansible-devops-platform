@@ -1,0 +1,56 @@
+name: 📖 Documentation
+description: Report something wrong, missing or unclear in the documentation
+title: "[Docs]: "
+labels: ["type:documentation", "status:needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Documentation issues are genuinely valuable — if something confused you,
+        it is confusing others too.
+
+        Small fixes are welcome straight as a pull request; no issue needed.
+
+  - type: input
+    id: page
+    attributes:
+      label: Document or page
+      description: Path or URL.
+      placeholder: "docs/configuration.md, or the Quick start section of README.md"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is wrong, missing, outdated or unclear?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of problem
+      options:
+        - Factually incorrect
+        - Out of date
+        - Missing information
+        - Unclear or confusing
+        - Broken link or example
+        - Typo or formatting
+        - Describes something that does not exist
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: How would you word it? A rough draft is fine.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: What were you trying to do when you hit this?

@@ -1,0 +1,17 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Question or help
+    url: https://github.com/cosmeaf/ansible-devops-platform/discussions/categories/q-a
+    about: Questions belong in Discussions, not Issues. You will get a faster answer there.
+
+  - name: 💡 Idea or feature discussion
+    url: https://github.com/cosmeaf/ansible-devops-platform/discussions/categories/ideas
+    about: Shape an idea here before it becomes a feature request.
+
+  - name: 🔒 Security vulnerability
+    url: https://github.com/cosmeaf/ansible-devops-platform/security/advisories/new
+    about: Report privately. Never open a public issue for a vulnerability.
+
+  - name: 📖 Documentation
+    url: https://github.com/cosmeaf/ansible-devops-platform/tree/main/docs
+    about: Read the documentation before opening an issue.

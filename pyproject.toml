@@ -1,0 +1,54 @@
+[project]
+name = "ansible-devops-platform"
+description = "Open-source, self-hosted DevOps automation and infrastructure management platform powered by Ansible."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+dynamic = ["version"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = ["*/migrations/*", ".venv", "staticfiles"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # import sorting
+    "B",    # bugbear
+    "UP",   # pyupgrade
+    "DJ",   # flake8-django
+    "S",    # bandit security rules
+    "C4",   # comprehensions
+]
+ignore = [
+    "S101",  # assert is the expected idiom in tests
+    "B008",  # Django/DRF settings idioms rely on calls in defaults
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S105", "S106"]        # test fixtures use obvious dummy secrets
+"core/settings.py" = ["S105"]       # setting *names* trip the hardcoded-password rule
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "audit",
+    "authentication",
+    "commun",
+    "core",
+    "ipintel",
+    "security",
+    "settings_platform",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.coverage.run]
+source = ["audit", "authentication", "commun", "core", "ipintel", "security", "settings_platform"]
+omit = ["*/migrations/*", "*/tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+skip_empty = true

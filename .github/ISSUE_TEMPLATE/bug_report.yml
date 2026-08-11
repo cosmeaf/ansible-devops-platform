@@ -1,0 +1,139 @@
+name: 🐛 Bug report
+description: Report a confirmed, reproducible defect
+title: "[Bug]: "
+labels: ["type:bug", "status:needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file this.
+
+        **Not sure it's a bug?** Start in
+        [Discussions → Q&A](https://github.com/cosmeaf/ansible-devops-platform/discussions/categories/q-a)
+        instead — nobody will mind.
+
+        **Is it a security vulnerability?** Stop. Do not fill this in. Report it
+        privately: [SECURITY.md](https://github.com/cosmeaf/ansible-devops-platform/blob/main/SECURITY.md)
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before you file
+      options:
+        - label: I searched existing issues and this is not a duplicate
+          required: true
+        - label: This is not a security vulnerability (those are reported privately)
+          required: true
+        - label: I will redact all secrets from any logs I paste
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What is wrong?
+      placeholder: A clear, concise description of the defect.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: The exact sequence that triggers it.
+      placeholder: |
+        1. Run `./scripts/bootstrap.sh`
+        2. Open http://localhost:47420/admin/
+        3. Click ...
+        4. See the error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: From `cat VERSION`, or the commit SHA.
+      placeholder: "0.1.0-dev / a1b2c3d"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment method
+      options:
+        - Docker Compose (bootstrap.sh)
+        - Docker Compose (manual)
+        - Manual install (venv + system PostgreSQL/Redis)
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Backend / API
+        - Database / migrations
+        - Celery / Redis
+        - Docker / Compose
+        - Bootstrap script
+        - Audit
+        - Security
+        - Authentication
+        - Documentation
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "macOS 15.2 / Ubuntu 24.04"
+    validations:
+      required: true
+
+  - type: input
+    id: docker-version
+    attributes:
+      label: Docker and Compose versions
+      description: Output of `docker --version` and `docker compose version`.
+      placeholder: "Docker 27.3.1, Compose v2.30.3"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Relevant output from `docker compose logs`, plus
+        `curl -s http://localhost:47420/api/v1/health/`.
+
+        ⚠️ **REMOVE every password, token, private key, session cookie and
+        `Authorization` header before pasting.** Once it is in a public issue,
+        it is public.
+      render: shell
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, workarounds you found, anything else.
