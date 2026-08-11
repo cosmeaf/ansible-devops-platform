@@ -14,6 +14,9 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
+#: A comment made only of rule characters — the top or bottom of a banner.
+_RULE = re.compile(r"^#[#=\-*_\s]*$")
+
 #: Directives we understand. Anything else in the file is skipped.
 _INTERESTING = {
     "hostname": "hostname",
@@ -36,12 +39,23 @@ class SSHHost:
     identity_file: str = ""
     proxy_jump: str = ""
     proxy_command: str = ""
+    #: The banner comment this block sits under, if the file uses them.
+    section: str = ""
     extra: dict = field(default_factory=dict)
 
     @property
     def name(self) -> str:
         """The first alias, which is what a person actually types."""
         return self.aliases[0]
+
+    @property
+    def client_name(self) -> str:
+        """The section title as a client name.
+
+        Banners are shouted by convention; a client list reads better without
+        the shouting, and ``S2DIGITAL`` still comes out as ``S2Digital``.
+        """
+        return self.section.title() if self.section.isupper() else self.section
 
     @property
     def is_wildcard(self) -> bool:
@@ -57,14 +71,52 @@ class SSHHost:
         return bool(self.proxy_jump or self.proxy_command)
 
 
+def _banner_title(lines: list[str], index: int) -> str:
+    """Return the section title if the comment at *index* is a banner.
+
+    People group an ssh_config with banners, and the title is almost always the
+    client or project the hosts below belong to — worth keeping. Two shapes are
+    recognised: a title sandwiched between rule lines, and a title written on
+    the rule itself (``#### VELOMA``). An ordinary comment explaining a
+    directive is neither, and is ignored.
+    """
+    line = lines[index]
+    if _RULE.match(line):
+        return ""
+
+    title = line.lstrip("#").strip(" -=*_")
+    if not title:
+        return ""
+
+    # `#### VELOMA` — the rule and the title on one line.
+    if line[:4].count("#") + line[:4].count("=") + line[:4].count("-") >= 3:
+        return title
+
+    def neighbour(step: int) -> str:
+        cursor = index + step
+        while 0 <= cursor < len(lines) and not lines[cursor]:
+            cursor += step
+        return lines[cursor] if 0 <= cursor < len(lines) else ""
+
+    if _RULE.match(neighbour(-1)) and _RULE.match(neighbour(1)):
+        return title
+    return ""
+
+
 def parse(text: str) -> list[SSHHost]:
     """Parse *text* as an ssh_config, returning one entry per ``Host`` block."""
     hosts: list[SSHHost] = []
     current: SSHHost | None = None
+    section = ""
 
-    for raw in text.splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#"):
+    lines = [raw.strip() for raw in text.splitlines()]
+    for index, line in enumerate(lines):
+        if not line:
+            continue
+
+        if line.startswith("#"):
+            if title := _banner_title(lines, index):
+                section = title
             continue
 
         # Directives may be separated by whitespace or '='.
@@ -74,7 +126,7 @@ def parse(text: str) -> list[SSHHost]:
         keyword, value = parts[0].lower(), parts[1].strip()
 
         if keyword == "host":
-            current = SSHHost(aliases=value.split())
+            current = SSHHost(aliases=value.split(), section=section)
             hosts.append(current)
             continue
 

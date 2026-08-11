@@ -66,6 +66,8 @@ Nothing below is marked available unless it exists in this repository today.
 - ✓ SSH, WinRM and (planned) agent connection methods across Linux, Windows,
       AIX, Solaris, HP-UX, BSD, macOS and network devices
 - ✓ Encrypted credential storage — write-only secrets that can never be read back
+- ✓ Import an existing `~/.ssh/config` as inventory, including its banner
+      comments as clients — `python manage.py import_ssh_config`
 - ✓ REST API at `/api/v1/` for servers, clients, groups, environments and
       credentials, with filtering, search and audit on every write
 - ✓ Session authentication

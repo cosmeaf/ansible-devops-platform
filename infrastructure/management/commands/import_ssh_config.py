@@ -26,7 +26,22 @@ class Command(BaseCommand):
             action="store_true",
             help="Show what would be registered without writing anything.",
         )
-        parser.add_argument("--client", help="Assign every imported server to this client name.")
+        parser.add_argument(
+            "--client",
+            help="Assign every imported server to this client name, ignoring section banners.",
+        )
+        parser.add_argument(
+            "--no-section-clients",
+            dest="section_clients",
+            action="store_false",
+            help="Do not turn banner comments (# AVALIZA) into clients.",
+        )
+        parser.add_argument(
+            "--update-existing",
+            action="store_true",
+            help="Fill in client, environment and groups on servers already registered "
+            "without them. Never overwrites a value that is already set.",
+        )
         parser.add_argument(
             "--environment", help="Assign every imported server to this environment."
         )
@@ -54,36 +69,49 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(self.style.WARNING("Dry run — nothing will be written.\n"))
 
+        # Everything below runs inside the transaction, so a dry run can create
+        # and report the same objects a real run would and then roll them back.
         with transaction.atomic():
-            client = environment = None
-            groups = []
-            if not dry_run:
-                if name := options.get("client"):
-                    client, _ = Client.objects.get_or_create(name=name)
-                if name := options.get("environment"):
-                    environment, _ = Environment.objects.get_or_create(name=name)
-                groups = [ServerGroup.objects.get_or_create(name=g)[0] for g in options["group"]]
+            forced_client = options.get("client")
+            environment = None
+            if name := options.get("environment"):
+                environment, _ = Environment.objects.get_or_create(name=name)
+            groups = [ServerGroup.objects.get_or_create(name=g)[0] for g in options["group"]]
 
-            created = skipped = 0
+            created = updated = skipped = 0
             for host in hosts:
-                exists = Server.objects.filter(name=host.name).exists()
+                client_name = forced_client or (
+                    host.client_name if options["section_clients"] else ""
+                )
                 jump = " via jump host" if host.needs_a_jump else ""
                 address = host.hostname or host.name
 
-                if exists:
-                    skipped += 1
-                    self.stdout.write(f"  = {host.name:<28} {address:<18} already registered")
+                if server := Server.objects.filter(name=host.name).first():
+                    changes = (
+                        self._backfill(server, client_name, environment, groups)
+                        if options["update_existing"]
+                        else []
+                    )
+                    if changes:
+                        updated += 1
+                        self.stdout.write(
+                            self.style.SUCCESS(
+                                f"  ~ {host.name:<28} {address:<18} {', '.join(changes)}"
+                            )
+                        )
+                    else:
+                        skipped += 1
+                        self.stdout.write(f"  = {host.name:<28} {address:<18} already registered")
                     continue
 
                 created += 1
+                owner = f"client={client_name} " if client_name else ""
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"  + {host.name:<28} {address:<18} "
+                        f"  + {host.name:<28} {address:<18} {owner}"
                         f"user={host.user or 'ansible':<10}port={host.port or 22}{jump}"
                     )
                 )
-                if dry_run:
-                    continue
 
                 server = Server.objects.create(
                     name=host.name,
@@ -91,7 +119,7 @@ class Command(BaseCommand):
                     primary_ip=host.hostname if _looks_like_ip(host.hostname) else None,
                     ansible_user=host.user or "ansible",
                     ssh_port=host.port or 22,
-                    client=client,
+                    client=_client_for(client_name),
                     environment=environment,
                     description=(
                         f"Imported from {path.name}"
@@ -106,7 +134,8 @@ class Command(BaseCommand):
 
         verb = "would be registered" if dry_run else "registered"
         self.stdout.write("")
-        self.stdout.write(self.style.SUCCESS(f"{created} {verb}, {skipped} already present."))
+        summary = f"{created} {verb}, {updated} updated, {skipped} already present."
+        self.stdout.write(self.style.SUCCESS(summary))
         if any(h.needs_a_jump for h in hosts):
             self.stdout.write(
                 self.style.WARNING(
@@ -115,6 +144,31 @@ class Command(BaseCommand):
                     "until the runner has the same network path."
                 )
             )
+
+    def _backfill(self, server, client_name, environment, groups) -> list[str]:
+        """Fill in what an already-registered server is missing.
+
+        Only ever fills a blank: a server someone has since assigned by hand
+        keeps what they chose.
+        """
+        changes = []
+        if client_name and server.client is None:
+            server.client = _client_for(client_name)
+            changes.append(f"client={client_name}")
+        if environment and server.environment is None:
+            server.environment = environment
+            changes.append(f"environment={environment}")
+        if changes:
+            server.save()
+
+        if missing := [g for g in groups if not server.groups.filter(pk=g.pk).exists()]:
+            server.groups.add(*missing)
+            changes.append("groups+" + ",".join(g.name for g in missing))
+        return changes
+
+
+def _client_for(name: str) -> Client | None:
+    return Client.objects.get_or_create(name=name)[0] if name else None
 
 
 def _looks_like_ip(value: str) -> bool:
