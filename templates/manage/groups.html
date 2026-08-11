@@ -4,9 +4,15 @@
 {% block subheading %}Each group becomes an Ansible inventory group.{% endblock %}
 
 {% block content %}
+{% if perms.infrastructure.add_servergroup %}
+<div class="toolbar">
+  <a href="{% url 'manage:group-create' %}" class="btn" style="width:auto;text-decoration:none">Create a group</a>
+</div>
+{% endif %}
+
 <div class="table-wrap">
   <table>
-    <thead><tr><th>Group</th><th>Slug</th><th>Description</th><th>Members</th></tr></thead>
+    <thead><tr><th>Group</th><th>Slug</th><th>Description</th><th>Members</th><th></th></tr></thead>
     <tbody>
       {% for g in page %}
       <tr>
@@ -14,9 +20,15 @@
         <td class="mono muted">{{ g.slug }}</td>
         <td class="muted">{{ g.description|default:"—"|truncatechars:70 }}</td>
         <td class="mono">{{ g.server_total }}</td>
+        <td>
+          <div class="row-actions">
+            {% if perms.infrastructure.change_servergroup %}<a href="{% url 'manage:group-edit' g.uuid %}">Edit</a>{% endif %}
+            {% if perms.infrastructure.delete_servergroup %}<a href="{% url 'manage:group-delete' g.uuid %}" class="is-danger">Delete</a>{% endif %}
+          </div>
+        </td>
       </tr>
       {% empty %}
-      <tr><td colspan="4" class="empty">No groups defined.</td></tr>
+      <tr><td colspan="5" class="empty">No groups defined.</td></tr>
       {% endfor %}
     </tbody>
   </table>

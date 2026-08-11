@@ -4,6 +4,17 @@
 {% block subheading %}{{ server.description|default:"Managed host" }}{% endblock %}
 
 {% block content %}
+<div class="toolbar">
+  <a href="{% url 'manage:servers' %}" class="btn btn--ghost" style="text-decoration:none">← All servers</a>
+  {% if perms.infrastructure.change_server %}
+    <a href="{% url 'manage:server-edit' server.uuid %}" class="btn" style="width:auto;text-decoration:none">Edit this server</a>
+  {% endif %}
+  {% if perms.infrastructure.delete_server %}
+    <a href="{% url 'manage:server-delete' server.uuid %}" class="btn btn--ghost"
+       style="margin-left:auto;text-decoration:none;color:var(--danger)">Delete</a>
+  {% endif %}
+</div>
+
 <div class="grid">
   <div class="tile">
     <span class="tile__label">Status</span>

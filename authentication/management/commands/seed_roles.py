@@ -52,6 +52,7 @@ PLATFORM_APPS = [
     "settings_platform",
     "authentication",
     "infrastructure",
+    "credentials",
 ]
 
 

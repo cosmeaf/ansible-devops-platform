@@ -12,6 +12,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator
 from django.db.models import Count
+from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET
@@ -94,6 +95,43 @@ def _crud(request, *, form_class, instance, module, redirect_to, title, subtitle
             "subtitle": subtitle,
             "cancel_url": reverse(redirect_to),
             "creating": creating,
+        },
+    )
+
+
+def _delete(request, *, instance, module, redirect_to, what, blocked_by=""):
+    """Shared delete handler, with a confirmation step.
+
+    A deletion nobody confirmed is a deletion nobody meant, so GET renders the
+    confirmation and only POST removes anything.
+    """
+    label = str(instance)
+
+    if request.method == "POST":
+        try:
+            instance.delete()
+        except ProtectedError:
+            messages.error(
+                request,
+                f"{label} still has servers attached. Reassign them before deleting it.",
+            )
+            return redirect(redirect_to)
+
+        # delete() clears the primary key but leaves the UUID, which is what
+        # the trail records — an audit entry that cannot name what it removed
+        # would be worthless.
+        _audit(request, AuditAction.DELETE, instance, module=module, new={"name": label})
+        messages.success(request, f"{label} deleted.")
+        return redirect(redirect_to)
+
+    return render(
+        request,
+        "manage/confirm_delete.html",
+        {
+            "what": what,
+            "label": label,
+            "blocked_by": blocked_by,
+            "cancel_url": reverse(redirect_to),
         },
     )
 
@@ -298,3 +336,138 @@ def credential_create(request):
         title="Add a credential",
         subtitle="Encrypted at rest. The secret can never be read back.",
     )
+
+
+@login_required
+@permission_required("infrastructure.change_servergroup", raise_exception=True)
+def group_edit(request, uuid):
+    return _crud(
+        request,
+        form_class=ServerGroupForm,
+        instance=get_object_or_404(ServerGroup, uuid=uuid),
+        module="infrastructure",
+        redirect_to="manage:groups",
+        title="Edit group",
+        subtitle="Renaming a group renames the Ansible inventory group.",
+    )
+
+
+@login_required
+@permission_required("infrastructure.change_environment", raise_exception=True)
+def environment_edit(request, uuid):
+    return _crud(
+        request,
+        form_class=EnvironmentForm,
+        instance=get_object_or_404(Environment, uuid=uuid),
+        module="infrastructure",
+        redirect_to="manage:environments",
+        title="Edit environment",
+        subtitle="A deployment tier. It can force check mode on every job.",
+    )
+
+
+@login_required
+@permission_required("infrastructure.change_client", raise_exception=True)
+def client_edit(request, uuid):
+    return _crud(
+        request,
+        form_class=ClientForm,
+        instance=get_object_or_404(Client, uuid=uuid),
+        module="infrastructure",
+        redirect_to="manage:clients",
+        title="Edit client",
+        subtitle="The customer or business unit that owns a set of servers.",
+    )
+
+
+@login_required
+@permission_required("credentials.change_credential", raise_exception=True)
+def credential_edit(request, uuid):
+    return _crud(
+        request,
+        form_class=CredentialForm,
+        instance=get_object_or_404(Credential, uuid=uuid),
+        module="credentials",
+        redirect_to="manage:credentials",
+        title="Edit credential",
+        subtitle="Leave the secret blank to keep the one already stored.",
+    )
+
+
+# --- delete screens -------------------------------------------------------
+
+
+@login_required
+@permission_required("infrastructure.delete_server", raise_exception=True)
+def server_delete(request, uuid):
+    return _delete(
+        request,
+        instance=get_object_or_404(Server, uuid=uuid),
+        module="infrastructure",
+        redirect_to="manage:servers",
+        what="server",
+        blocked_by="It disappears from every generated inventory.",
+    )
+
+
+@login_required
+@permission_required("infrastructure.delete_servergroup", raise_exception=True)
+def group_delete(request, uuid):
+    group = get_object_or_404(ServerGroup, uuid=uuid)
+    return _delete(
+        request,
+        instance=group,
+        module="infrastructure",
+        redirect_to="manage:groups",
+        what="group",
+        blocked_by=_members(group.servers.count(), "keep their registration"),
+    )
+
+
+@login_required
+@permission_required("infrastructure.delete_environment", raise_exception=True)
+def environment_delete(request, uuid):
+    environment = get_object_or_404(Environment, uuid=uuid)
+    return _delete(
+        request,
+        instance=environment,
+        module="infrastructure",
+        redirect_to="manage:environments",
+        what="environment",
+        blocked_by=_members(environment.servers.count(), "must be reassigned first"),
+    )
+
+
+@login_required
+@permission_required("infrastructure.delete_client", raise_exception=True)
+def client_delete(request, uuid):
+    client = get_object_or_404(Client, uuid=uuid)
+    return _delete(
+        request,
+        instance=client,
+        module="infrastructure",
+        redirect_to="manage:clients",
+        what="client",
+        blocked_by=_members(client.servers.count(), "must be reassigned first"),
+    )
+
+
+@login_required
+@permission_required("credentials.delete_credential", raise_exception=True)
+def credential_delete(request, uuid):
+    credential = get_object_or_404(Credential, uuid=uuid)
+    return _delete(
+        request,
+        instance=credential,
+        module="credentials",
+        redirect_to="manage:credentials",
+        what="credential",
+        blocked_by=_members(credential.servers.count(), "will be left without a credential"),
+    )
+
+
+def _members(count: int, consequence: str) -> str:
+    """Say what happens to the servers attached, so the warning is specific."""
+    if not count:
+        return ""
+    return f"{count} server{'s' if count != 1 else ''} {consequence}."
