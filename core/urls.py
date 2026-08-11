@@ -8,5 +8,6 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("manage/", include("infrastructure.urls")),
     path("api/v1/health/", health, name="health"),
+    path("api/v1/", include("core.api_urls")),
     path("", dashboard, name="dashboard"),
 ]

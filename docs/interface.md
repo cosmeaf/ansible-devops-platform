@@ -4,7 +4,7 @@ The platform has two distinct surfaces, and the split is deliberate:
 
 | Surface | Purpose | Audience |
 |---|---|---|
-| **`/manage/`** | **Managing Ansible** — servers, groups, environments, and (planned) inventories, playbooks and jobs | Everyone using the product |
+| **`/manage/`** | **Managing Ansible** — servers, clients, groups, environments, credentials, and (planned) inventories, playbooks and jobs | Everyone using the product |
 | **`/admin/`** | Platform internals — audit trail, security events, IP intelligence, platform settings, users and roles | Operators only |
 
 Signing in takes you **straight into Ansible management**. There is no landing
@@ -61,13 +61,62 @@ Status is only ever set by a real connection test — it is never assumed.
 
 ---
 
-## Server detail
+## Registering a server
 
-![Server detail](images/manage-server-detail.png)
+![Register a server](images/manage-server-new.png)
 
-Per-host detail, including **exactly what this server contributes to an Ansible
-inventory**. Those variables are standard Ansible; they work with
-`ansible-playbook` directly, with or without this platform.
+Servers are registered from the web — no shell required. The form captures what
+Ansible needs to reach a host and nothing more.
+
+A host must be **addressable**: either an IP or a hostname. Ansible would
+otherwise fall back to the inventory name, which works only if DNS happens to
+resolve it, and fails at execution time rather than at registration.
+
+**Connection method is separate from operating system**, deliberately. A Windows
+host reached over SSH is a real configuration, so the transport decides
+`ansible_connection`, not the OS. Choosing WinRM defaults the port to 5986.
+
+Everything here is also available over the API:
+
+```bash
+curl -X POST http://localhost:47420/api/v1/servers/ \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"web01","primary_ip":"198.51.100.11","groups":["webservers"]}'
+```
+
+Both paths enforce the same permissions and write the same audit event.
+
+---
+
+## Clients
+
+![Clients](images/manage-clients.png)
+
+The customer or business unit that owns a set of servers, for anyone managing
+infrastructure for more than one party. Optional — a single-tenant install can
+ignore it.
+
+A client cannot be deleted while it still owns servers.
+
+---
+
+## Credentials
+
+![Credentials](images/manage-credentials.png)
+
+SSH keys, SSH passwords and become (sudo) passwords, **encrypted at rest** with
+`PLATFORM_ENCRYPTION_KEY` — which lives in `.env`, never in the database. A
+database dump on its own therefore yields nothing.
+
+A stored secret **can never be read back**:
+
+- the API serializer field is write-only, so no endpoint can return it;
+- the admin and web forms never populate the field from the stored value;
+- `__str__` and the audit trail never contain it.
+
+Leave the secret blank when editing to keep the existing one. `use` is a
+distinct permission from `view`, so an operator can run a playbook with a
+credential without ever being able to see it.
 
 ---
 

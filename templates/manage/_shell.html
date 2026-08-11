@@ -37,6 +37,17 @@
         Environments
       </a>
 
+      <a href="{% url 'manage:clients' %}" class="{% if section == 'clients' %}is-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M2 14V5l6-3 6 3v9H9.5v-3.5h-3V14H2z"/></svg>
+        Clients
+      </a>
+
+      <div class="nav__group">Access</div>
+      <a href="{% url 'manage:credentials' %}" class="{% if section == 'credentials' %}is-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M11 1a4 4 0 00-3.8 5.2L1.5 11.9V14.5H4v-1.5h1.5V11.5H7l1.3-1.3A4 4 0 1011 1zm.8 3.7a1.1 1.1 0 110-2.2 1.1 1.1 0 010 2.2z"/></svg>
+        Credentials
+      </a>
+
       {% block nav_extra %}{% endblock %}
     </nav>
 

@@ -1,0 +1,32 @@
+{% extends "manage/_shell.html" %}
+{% block title %}Clients — Ansible DevOps Platform{% endblock %}
+{% block heading %}Clients{% endblock %}
+{% block subheading %}The customers or business units that own your servers.{% endblock %}
+
+{% block content %}
+{% if perms.infrastructure.add_client %}
+<div class="toolbar">
+  <a href="{% url 'manage:client-create' %}" class="btn" style="width:auto;text-decoration:none">New client</a>
+</div>
+{% endif %}
+
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Name</th><th>Slug</th><th>Contact</th><th>Servers</th><th>Active</th></tr></thead>
+    <tbody>
+      {% for c in page %}
+      <tr>
+        <td><b>{{ c.name }}</b></td>
+        <td class="mono muted">{{ c.slug }}</td>
+        <td class="muted">{{ c.contact_email|default:"—" }}</td>
+        <td class="mono">{{ c.server_total }}</td>
+        <td>{% if c.active %}<span class="tag tag--ok">Active</span>{% else %}<span class="tag">Inactive</span>{% endif %}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="empty">No clients yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "manage/_pager.html" %}
+{% endblock %}
