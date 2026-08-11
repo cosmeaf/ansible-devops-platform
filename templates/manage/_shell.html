@@ -79,6 +79,14 @@
     </header>
 
     <div class="main__body">
+      {% if messages %}
+        {% for message in messages %}
+        <div class="flash {% if message.tags %}flash--{{ message.tags }}{% endif %}" role="status">
+          {{ message }}
+        </div>
+        {% endfor %}
+      {% endif %}
+
       {% block content %}{% endblock %}
     </div>
   </div>

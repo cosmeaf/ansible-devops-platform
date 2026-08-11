@@ -12,7 +12,7 @@
 
 <div class="table-wrap">
   <table>
-    <thead><tr><th>Name</th><th>Slug</th><th>Contact</th><th>Servers</th><th>Active</th></tr></thead>
+    <thead><tr><th>Name</th><th>Slug</th><th>Contact</th><th>Servers</th><th>Active</th><th></th></tr></thead>
     <tbody>
       {% for c in page %}
       <tr>
@@ -21,9 +21,15 @@
         <td class="muted">{{ c.contact_email|default:"—" }}</td>
         <td class="mono">{{ c.server_total }}</td>
         <td>{% if c.active %}<span class="tag tag--ok">Active</span>{% else %}<span class="tag">Inactive</span>{% endif %}</td>
+        <td>
+          <div class="row-actions">
+            {% if perms.infrastructure.change_client %}<a href="{% url 'manage:client-edit' c.uuid %}">Edit</a>{% endif %}
+            {% if perms.infrastructure.delete_client %}<a href="{% url 'manage:client-delete' c.uuid %}" class="is-danger">Delete</a>{% endif %}
+          </div>
+        </td>
       </tr>
       {% empty %}
-      <tr><td colspan="5" class="empty">No clients yet.</td></tr>
+      <tr><td colspan="6" class="empty">No clients yet.</td></tr>
       {% endfor %}
     </tbody>
   </table>
