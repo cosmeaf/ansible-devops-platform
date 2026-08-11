@@ -66,6 +66,9 @@ Nothing below is marked available unless it exists in this repository today.
 - ✓ SSH, WinRM and (planned) agent connection methods across Linux, Windows,
       AIX, Solaris, HP-UX, BSD, macOS and network devices
 - ✓ Encrypted credential storage — write-only secrets that can never be read back
+- ✓ Standard Ansible YAML inventory generated from the registered servers,
+      viewable and downloadable at `/manage/inventory/` or written to a file
+      with `python manage.py generate_inventory`
 - ✓ Import an existing `~/.ssh/config` as inventory, including its banner
       comments as clients — `python manage.py import_ssh_config`
 - ✓ REST API at `/api/v1/` for servers, clients, groups, environments and
@@ -162,6 +165,7 @@ docker compose down         # stop, keeping data
 ├── security/              Security event records
 ├── ipintel/               IP intelligence models and provider abstraction
 ├── infrastructure/        Servers, clients, groups, environments
+├── inventory/             Ansible inventory generation from the registered servers
 ├── credentials/           Encrypted SSH / become credentials
 ├── settings_platform/     Database-backed operational settings
 ├── tests/                 Test suite (runs against real PostgreSQL)

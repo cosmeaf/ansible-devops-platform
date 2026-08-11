@@ -42,6 +42,12 @@
         Clients
       </a>
 
+      <div class="nav__group">Ansible</div>
+      <a href="{% url 'inventory:preview' %}" class="{% if section == 'inventory' %}is-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1.5 3v1.5h7V5h-7zm0 3v1.5h7V8h-7zm0 3v1.5h4.5V11H4.5z"/></svg>
+        Inventory
+      </a>
+
       <div class="nav__group">Access</div>
       <a href="{% url 'manage:credentials' %}" class="{% if section == 'credentials' %}is-active{% endif %}">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M11 1a4 4 0 00-3.8 5.2L1.5 11.9V14.5H4v-1.5h1.5V11.5H7l1.3-1.3A4 4 0 1011 1zm.8 3.7a1.1 1.1 0 110-2.2 1.1 1.1 0 010 2.2z"/></svg>

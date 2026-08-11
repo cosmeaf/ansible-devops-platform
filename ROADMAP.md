@@ -58,7 +58,7 @@ Before you can automate infrastructure, the platform has to know it exists.
 The point of the whole project. Ansible remains the engine; nothing here
 becomes a proprietary format.
 
-- [ ] Inventory generation, compatible with standard Ansible inventories
+- [x] Inventory generation, compatible with standard Ansible inventories
 - [ ] Playbook management (standard Ansible YAML)
 - [ ] Role management
 - [ ] Variable management
