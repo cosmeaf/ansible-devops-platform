@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "ipintel",
     "audit",
     "settings_platform",
+    "infrastructure",
 ]
 
 MIDDLEWARE = [

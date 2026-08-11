@@ -1,0 +1,55 @@
+{% extends "manage/_shell.html" %}
+{% block title %}{{ server.name }} — Ansible DevOps Platform{% endblock %}
+{% block heading %}{{ server.name }}{% endblock %}
+{% block subheading %}{{ server.description|default:"Managed host" }}{% endblock %}
+
+{% block content %}
+<div class="grid">
+  <div class="tile">
+    <span class="tile__label">Status</span>
+    {% if server.status == "ONLINE" %}<span class="pill"><span class="dot"></span> Online</span>
+    {% else %}<div class="tile__value">{{ server.get_status_display }}</div>{% endif %}
+    <span class="tile__hint">Last tested {{ server.last_connection_test|date:"Y-m-d H:i"|default:"never" }}</span>
+  </div>
+  <div class="tile">
+    <span class="tile__label">Address</span>
+    <div class="tile__value mono">{{ server.ansible_host }}</div>
+    <span class="tile__hint">Port {{ server.ssh_port }} · user {{ server.ansible_user }}</span>
+  </div>
+  <div class="tile">
+    <span class="tile__label">Environment</span>
+    <div class="tile__value">{{ server.environment.name|default:"—" }}</div>
+    <span class="tile__hint">{{ server.get_operating_system_display }}</span>
+  </div>
+</div>
+
+<h2 class="section-title">Inventory representation</h2>
+<p class="muted" style="margin:0 0 10px;font-size:13.5px">
+  Exactly what this host contributes to a standard Ansible inventory. Nothing
+  proprietary — these variables work with <code>ansible-playbook</code> directly.
+</p>
+<div class="table-wrap" style="margin-bottom:26px">
+  <table>
+    <thead><tr><th>Variable</th><th>Value</th></tr></thead>
+    <tbody>
+      {% for key, value in server.to_inventory_host.items %}
+      <tr><td class="mono">{{ key }}</td><td class="mono muted">{{ value }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2 class="section-title">Groups</h2>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Group</th><th>Description</th><th>Members</th></tr></thead>
+    <tbody>
+      {% for g in server.groups.all %}
+      <tr><td><b>{{ g.name }}</b></td><td class="muted">{{ g.description|default:"—" }}</td><td class="mono">{{ g.member_count }}</td></tr>
+      {% empty %}
+      <tr><td colspan="3" class="empty">Not a member of any group.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

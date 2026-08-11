@@ -76,11 +76,14 @@ def test_passwords_are_hashed_never_stored_in_clear():
 
 
 @pytest.mark.django_db
-def test_dashboard_renders_for_anonymous_and_authenticated_users(client, user):
-    assert client.get(reverse("dashboard")).status_code == 200
+def test_the_site_root_always_redirects(client, user):
+    """There is no landing page: the product is Ansible management."""
+    anonymous = client.get(reverse("dashboard"))
+    assert anonymous.status_code == 302
+    assert reverse("login") in anonymous["Location"]
 
     client.force_login(user)
-    response = client.get(reverse("dashboard"))
+    signed_in = client.get(reverse("dashboard"))
 
-    assert response.status_code == 200
-    assert user.username in response.content.decode()
+    assert signed_in.status_code == 302
+    assert signed_in["Location"] == reverse("manage:overview")

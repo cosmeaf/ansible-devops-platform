@@ -45,7 +45,14 @@ SYSTEM_ROLES = {
     ),
 }
 
-PLATFORM_APPS = ["audit", "security", "ipintel", "settings_platform", "authentication"]
+PLATFORM_APPS = [
+    "audit",
+    "security",
+    "ipintel",
+    "settings_platform",
+    "authentication",
+    "infrastructure",
+]
 
 
 class Command(BaseCommand):

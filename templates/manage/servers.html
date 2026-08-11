@@ -1,0 +1,55 @@
+{% extends "manage/_shell.html" %}
+{% block title %}Servers — Ansible DevOps Platform{% endblock %}
+{% block heading %}Servers{% endblock %}
+{% block subheading %}Hosts Ansible manages. Each becomes an inventory entry.{% endblock %}
+
+{% block content %}
+<form class="toolbar" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Filter by name…">
+  <select name="environment">
+    <option value="">All environments</option>
+    {% for e in environments %}
+      <option value="{{ e.slug }}" {% if e.slug == selected_environment %}selected{% endif %}>{{ e.name }}</option>
+    {% endfor %}
+  </select>
+  <select name="status">
+    <option value="">Any status</option>
+    {% for value, label in statuses %}
+      <option value="{{ value }}" {% if value == selected_status %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn--ghost">Filter</button>
+  {% if q or selected_environment or selected_status %}
+    <a href="{% url 'manage:servers' %}" class="muted">Clear</a>
+  {% endif %}
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Address</th><th>User</th><th>Environment</th><th>Groups</th><th>Status</th><th>Last tested</th></tr>
+    </thead>
+    <tbody>
+      {% for s in page %}
+      <tr>
+        <td><a href="{% url 'manage:server-detail' s.uuid %}"><b>{{ s.name }}</b></a></td>
+        <td class="mono muted">{{ s.ansible_host }}:{{ s.ssh_port }}</td>
+        <td class="mono muted">{{ s.ansible_user }}</td>
+        <td>{% if s.environment %}<span class="tag tag--info">{{ s.environment.name }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td>{% for g in s.groups.all %}<span class="tag">{{ g.name }}</span>{% empty %}<span class="muted">—</span>{% endfor %}</td>
+        <td>
+          {% if s.status == "ONLINE" %}<span class="tag tag--ok">Online</span>
+          {% elif s.status == "OFFLINE" %}<span class="tag tag--err">Offline</span>
+          {% elif s.status == "ERROR" %}<span class="tag tag--err">Error</span>
+          {% else %}<span class="tag">Unknown</span>{% endif %}
+        </td>
+        <td class="mono muted">{{ s.last_connection_test|date:"Y-m-d H:i"|default:"never" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="empty">No servers match.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "manage/_pager.html" %}
+{% endblock %}
