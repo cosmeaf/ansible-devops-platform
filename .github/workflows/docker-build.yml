@@ -33,12 +33,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The compose file declares `env_file: .env`, which is gitignored and so
+      # never present in CI. .env.example carries the same keys with
+      # placeholder values, which is all `config` needs to resolve the file.
+      - name: Provide a throwaway .env for validation
+        run: cp .env.example .env
+
       - name: Validate the Compose file
         run: docker compose config -q
-        env:
-          POSTGRES_DB: ci
-          POSTGRES_USER: ci
-          POSTGRES_PASSWORD: ci
+
+      - name: Remove the throwaway .env before the build context is read
+        run: rm -f .env
 
       - uses: docker/setup-buildx-action@v3
 
