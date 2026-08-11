@@ -80,6 +80,7 @@ jobs:
       # CI-only values. These are not secrets: the services are ephemeral,
       # reachable only from this runner, and destroyed when the job ends.
       DJANGO_SECRET_KEY: ci-only-key-not-used-anywhere-else
+      PLATFORM_ENCRYPTION_KEY: ci-only-encryption-key-not-used-anywhere-else
       DJANGO_DEBUG: "False"
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
       POSTGRES_DB: ansible_platform

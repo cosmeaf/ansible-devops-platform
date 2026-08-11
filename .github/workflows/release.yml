@@ -48,6 +48,7 @@ jobs:
 
     env:
       DJANGO_SECRET_KEY: ci-only-key-not-used-anywhere-else
+      PLATFORM_ENCRYPTION_KEY: ci-only-encryption-key-not-used-anywhere-else
       DJANGO_DEBUG: "False"
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
       POSTGRES_DB: ansible_platform
