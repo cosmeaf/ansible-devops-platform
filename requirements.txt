@@ -1,7 +1,7 @@
 # Runtime dependencies — Python 3.12
 Django>=5.1,<5.3
 djangorestframework>=3.15,<3.17
-psycopg[binary]>=3.2,<3.3
+psycopg[binary]>=3.3.4,<3.4
 redis>=5.2,<7
 celery>=5.4,<5.6
 django-cors-headers>=4.6,<5
