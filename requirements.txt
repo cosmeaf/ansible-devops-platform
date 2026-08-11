@@ -10,3 +10,9 @@ python-decouple>=3.8,<4
 cryptography>=50.0.0,<51
 PyYAML>=6.0,<7
 gunicorn>=23,<24
+
+# The execution engine. ansible-core is Ansible itself; ansible-runner is the
+# supported way to drive it from a process and collect events, rather than
+# parsing the output of a shell command. See docs/adr/0005.
+ansible-core>=2.17,<2.19
+ansible-runner>=2.4,<2.5

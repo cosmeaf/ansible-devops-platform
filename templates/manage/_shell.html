@@ -47,6 +47,10 @@
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.5h6.2L13 4.3V14a.5.5 0 01-.5.5h-9A.5.5 0 013 14V2a.5.5 0 011-.5zm5.5 1.2V5H12L9.5 2.7zM5 7v1.2h6V7H5zm0 2.6v1.2h6V9.6H5z"/></svg>
         Playbooks
       </a>
+      <a href="{% url 'jobs:list' %}" class="{% if section == 'jobs' %}is-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5A6.5 6.5 0 1014.5 8 6.5 6.5 0 008 1.5zm.75 3v3.2l2.4 1.4-.75 1.3L7.25 8.4V4.5z"/></svg>
+        Jobs
+      </a>
       <a href="{% url 'inventory:preview' %}" class="{% if section == 'inventory' %}is-active{% endif %}">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1.5 3v1.5h7V5h-7zm0 3v1.5h7V8h-7zm0 3v1.5h4.5V11H4.5z"/></svg>
         Inventory
