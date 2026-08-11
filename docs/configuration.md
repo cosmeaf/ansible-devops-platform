@@ -88,16 +88,39 @@ Sessions also expire when the browser closes.
 DRF requires authentication by default. An endpoint that should be public must
 opt out explicitly — the health endpoint does.
 
-## Initial administrator
+## Initial accounts
 
-Used only on first bootstrap. Changing these later has no effect; the account
-already exists.
+Two accounts are created on first bootstrap, with deliberately different reach.
+Changing these later has no effect — the accounts already exist. To reset a
+password to the configured value, run
+`python manage.py seed_users --force-password`.
+
+### Operator account — may open Django Admin
 
 | Variable | Default |
 |---|---|
 | `INITIAL_ADMIN_USERNAME` | `admin` |
 | `INITIAL_ADMIN_EMAIL` | `admin@localhost` |
 | `INITIAL_ADMIN_PASSWORD` | Generated |
+
+Granted the **Administrator** role.
+
+### Platform account — may NOT open Django Admin
+
+| Variable | Default |
+|---|---|
+| `INITIAL_PLATFORM_USERNAME` | `ansible` |
+| `INITIAL_PLATFORM_EMAIL` | `ansible@localhost` |
+| `INITIAL_PLATFORM_PASSWORD` | Generated |
+
+Granted the **Operator** role, which does not carry `grants_admin_access`, so
+`/admin/` redirects this account away. Leave `INITIAL_PLATFORM_PASSWORD` unset
+to skip creating it.
+
+> **Setting these to weak values (`admin`/`admin`) is a local-development
+> convenience only.** `.env` is gitignored, so your choice never reaches the
+> repository — but a deployment that ships a guessable default is the first
+> thing an automated scanner finds. Leave them generated anywhere real.
 
 ## Networking
 

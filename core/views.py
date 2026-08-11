@@ -6,6 +6,7 @@ import redis
 from django.conf import settings
 from django.db import connection
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
 logger = logging.getLogger(__name__)
@@ -35,6 +36,16 @@ def _check_redis() -> bool:
     except Exception:
         logger.warning("Health check: redis unreachable", exc_info=True)
         return False
+
+
+@require_GET
+def dashboard(request):
+    """Minimal landing page.
+
+    Server-rendered on purpose: it exists so a fresh installation is usable and
+    verifiable before the Next.js module lands, not as the product interface.
+    """
+    return render(request, "dashboard/index.html", {"version": settings.VERSION})
 
 
 @require_GET

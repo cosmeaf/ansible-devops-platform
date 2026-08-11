@@ -64,6 +64,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "core.context_processors.platform",
             ],
         },
     }
@@ -125,6 +126,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+# ModelBackend authenticates; RolePermissionBackend answers permission
+# questions from role assignments. Django ORs the two together.
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "authentication.backends.RolePermissionBackend",
 ]
 
 LOGIN_URL = "/accounts/login/"
@@ -209,6 +217,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # ---------------------------------------------------------------------------
 # Logging — structured enough to correlate by request id, quiet enough to read.

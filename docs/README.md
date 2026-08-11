@@ -13,6 +13,7 @@
 
 | Guide | For |
 |---|---|
+| [Interface](interface.md) | The management interface, with screenshots |
 | [Architecture](architecture.md) | How the pieces fit together |
 | [Security](security.md) | The security model, honestly stated |
 | [Audit](audit.md) | What gets recorded, and what never does |

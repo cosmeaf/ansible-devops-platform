@@ -133,7 +133,7 @@ marketing.
 
 | Missing | Impact | Planned |
 |---|---|---|
-| **RBAC** | Only Django's staff/superuser distinction exists. There is no role model, and no per-resource permission. | 0.2.0 |
+| **Per-scope RBAC** | Roles are implemented, but permissions are global — a role cannot yet be limited to one environment or asset group. | 0.3.0 |
 | **MFA** | Password-only authentication. | Not scheduled |
 | **Forced password change** | The generated admin password stays valid until someone changes it manually. | 0.2.0 |
 | **Account lockout** | `SecurityEvent` can record failed logins; **nothing acts on them**. Brute-force protection is rate limiting only. | 0.2.0 |
