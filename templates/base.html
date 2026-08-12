@@ -182,16 +182,20 @@
        Pinned to the right edge: these tables are wider than the viewport, and
        a column you have to scroll sideways to find is a column nobody finds.
        The shadow is the cue that content continues underneath it. */
+    /* The actions column. It is sticky, so it needs an opaque background —
+       and that background has to be the one the row already has, or the column
+       reads as a separate block bolted to the side of the table. Header grey in
+       the head, surface in the body, and the same grey on hover as the row. */
     th.col-actions, td.col-actions {
       position: sticky; right: 0; z-index: 2;
-      background: var(--surface);
-      box-shadow: -10px 0 10px -8px rgba(16, 24, 40, .16);
       /* Shrink to the buttons and let the column before it absorb the slack,
          so the actions sit against the right edge on every table — not
          floating mid-row on the narrow ones and pinned on the wide ones. */
       width: 1%; white-space: nowrap; text-align: right;
     }
-    tbody tr:hover td.col-actions { background: var(--accent-soft); }
+    th.col-actions { background: var(--bg); }
+    td.col-actions { background: var(--surface); }
+    tbody tr:hover td.col-actions { background: var(--bg); }
 
     .row-actions { display: flex; gap: 6px; justify-content: flex-end; white-space: nowrap; }
     .row-actions a {
