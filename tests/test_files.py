@@ -213,7 +213,7 @@ def test_a_file_with_an_unsupported_extension_is_refused(client, ws, author):
 
 
 def test_broken_yaml_is_still_refused_in_the_general_editor(client, ws, author):
-    workspace.write_file("group_vars/all.yml", "ntp: pool.ntp.org\n")
+    workspace.write_file("group_vars/all.yml", "ntp: fixture-value\n")
     client.force_login(author)
 
     response = client.post(
@@ -223,7 +223,7 @@ def test_broken_yaml_is_still_refused_in_the_general_editor(client, ws, author):
 
     assert response.status_code == 200
     assert "Invalid YAML" in response.content.decode()
-    assert "pool.ntp.org" in workspace.read_file("group_vars/all.yml")
+    assert workspace.read_file("group_vars/all.yml") == "ntp: fixture-value\n"
 
 
 def test_a_non_yaml_file_is_saved_without_yaml_validation(client, ws, author):

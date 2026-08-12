@@ -172,7 +172,9 @@ def test_a_jump_host_is_recorded_in_the_description(tmp_path):
 
     call_command("import_ssh_config", path=str(config))
 
-    assert "bastion.example.com" in Server.objects.get(name="legacy").description
+    description = Server.objects.get(name="legacy").description
+
+    assert description == "Imported from config; reachable via bastion.example.com"
 
 
 @pytest.mark.django_db
