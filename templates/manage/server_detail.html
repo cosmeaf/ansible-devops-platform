@@ -8,16 +8,37 @@
   <a href="{% url 'manage:servers' %}" class="btn btn--ghost" style="text-decoration:none">← All servers</a>
   {% if perms.infrastructure.change_server %}
     <a href="{% url 'manage:server-edit' server.uuid %}" class="btn" style="width:auto;text-decoration:none">Edit this server</a>
-    <form method="post" action="{% url 'jobs:server-test' server.uuid %}" style="margin:0">
-      {% csrf_token %}
-      <button type="submit" class="btn btn--ghost">Test connection</button>
-    </form>
+    {% if host_key_trusted %}
+      <form method="post" action="{% url 'jobs:server-test' server.uuid %}" style="margin:0">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--ghost">Test connection</button>
+      </form>
+      <form method="post" action="{% url 'jobs:server-forget' server.uuid %}" style="margin:0">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--ghost">Forget host key</button>
+      </form>
+    {% else %}
+      <a href="{% url 'jobs:server-trust' server.uuid %}" class="btn btn--ghost"
+         style="text-decoration:none">Review host key</a>
+    {% endif %}
   {% endif %}
   {% if perms.infrastructure.delete_server %}
     <a href="{% url 'manage:server-delete' server.uuid %}" class="btn btn--ghost"
        style="margin-left:auto;text-decoration:none;color:var(--danger)">Delete</a>
   {% endif %}
 </div>
+
+{% if not host_key_trusted %}
+<div class="alert" role="alert" style="margin-bottom:16px">
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+    <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7.25 4.5h1.5v5h-1.5v-5zm0 6.25h1.5v1.5h-1.5v-1.5z"/>
+  </svg>
+  <span>
+    No host key has been accepted for this server, so Ansible will refuse to
+    connect to it. Review the fingerprint to allow runs against it.
+  </span>
+</div>
+{% endif %}
 
 <div class="grid">
   <div class="tile">

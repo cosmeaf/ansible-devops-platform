@@ -395,7 +395,23 @@ def test_a_group_narrows_the_servers_a_job_targets(client, operator, server, tmp
 
 
 @pytest.mark.django_db
-def test_testing_a_connection_queues_a_job(client, operator, server):
+def test_testing_a_connection_queues_a_job(client, operator, server, tmp_path, settings):
+    from automation.known_hosts import HostKey, trust
+
+    # Ansible refuses a host whose key was never accepted, so a test that
+    # queues a job has to have accepted one first.
+    settings.ANSIBLE_WORKSPACE = tmp_path / "ansible"
+    trust(
+        [
+            HostKey(
+                host="198.51.100.10",
+                port=22,
+                key_type="ED25519",
+                fingerprint="SHA256:abc",
+                line="198.51.100.10 ssh-ed25519 AAAAC3Example",
+            )
+        ]
+    )
     client.force_login(operator)
 
     with patch("jobs.views.check_connection.delay") as queued:

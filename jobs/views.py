@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
 from audit.models import AuditAction, AuditEvent, AuditResult
+from automation.known_hosts import ScanFailed, forget, is_trusted, scan, trust
 from infrastructure.models import Server
 
 from .forms import RunPlaybookForm
@@ -114,10 +115,85 @@ def job_create(request):
 
 @login_required
 @permission_required("infrastructure.change_server", raise_exception=True)
+def server_trust(request, uuid):
+    """Show the host key a server offers, and record the decision to accept it.
+
+    Ansible will not connect to a host whose key it has never seen, and that
+    refusal is the protection working. Someone still has to look at the
+    fingerprint and say yes, which is what this screen is for.
+    """
+    server = get_object_or_404(Server, uuid=uuid)
+
+    try:
+        keys = scan(server.ansible_host, server.ssh_port)
+    except ScanFailed as error:
+        messages.error(request, str(error))
+        return redirect("manage:server-detail", uuid=server.uuid)
+
+    if request.method == "POST":
+        added = trust(keys)
+        AuditEvent.objects.create(
+            user=request.user,
+            username_snapshot=request.user.get_username(),
+            request_id=getattr(request, "request_id", "") or "",
+            session_id=request.session.session_key or "",
+            source_ip=request.META.get("REMOTE_ADDR") or None,
+            module="automation",
+            resource_type="Server",
+            resource_id=str(server.uuid),
+            action=AuditAction.UPDATE,
+            new_value={
+                "trusted_host_key": server.ansible_host,
+                "fingerprints": [key.label for key in keys],
+            },
+            result=AuditResult.SUCCESS,
+            user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
+        )
+        messages.success(
+            request,
+            f"Host key accepted for {server.name}."
+            if added
+            else f"{server.name} was already trusted.",
+        )
+        return redirect("manage:server-detail", uuid=server.uuid)
+
+    return render(
+        request,
+        "manage/trust_host_key.html",
+        {"section": "servers", "server": server, "keys": keys},
+    )
+
+
+@login_required
+@permission_required("infrastructure.change_server", raise_exception=True)
+@require_POST
+def server_forget(request, uuid):
+    """Drop a host key, so the next run refuses until it is accepted again."""
+    server = get_object_or_404(Server, uuid=uuid)
+    removed = forget(server.ansible_host, server.ssh_port)
+    messages.success(
+        request,
+        f"Host key forgotten for {server.name}."
+        if removed
+        else f"{server.name} had no trusted key.",
+    )
+    return redirect("manage:server-detail", uuid=server.uuid)
+
+
+@login_required
+@permission_required("infrastructure.change_server", raise_exception=True)
 @require_POST
 def server_test(request, uuid):
     """Queue a connection test for one server."""
     server = get_object_or_404(Server, uuid=uuid)
+
+    if not is_trusted(server.ansible_host, server.ssh_port):
+        messages.error(
+            request,
+            f"{server.name} has no accepted host key, so Ansible would refuse to "
+            "connect. Review its fingerprint first.",
+        )
+        return redirect("jobs:server-trust", uuid=server.uuid)
 
     job = Job.objects.create(
         kind=JobKind.CONNECTION_TEST,
