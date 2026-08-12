@@ -167,6 +167,10 @@ The Ansible project as it exists on disk: a folder tree, and a listing you can
 walk into. Create, edit, rename and delete **files and folders** — `playbooks/`,
 `roles/`, `group_vars/`, `host_vars/`, `inventories/`, `ansible.cfg`.
 
+There is one such screen, not two. `/manage/playbooks/` opens the explorer
+at `playbooks/` rather than showing the same files again under a second
+heading.
+
 Nothing here is a proprietary format. The workspace is a standard Ansible
 layout, and everything written through the editor keeps working with plain
 `ansible-playbook` if the platform disappears.
@@ -176,13 +180,6 @@ YAML is validated before it is written, as what it actually is: a file under
 parse. Deleting a folder says how many files would go before it takes them.
 
 ---
-
-## Playbooks
-
-![Playbooks](images/manage-playbooks.png)
-
-The same files, filtered to the playbooks, for when that is all you want to
-see.
 
 ---
 

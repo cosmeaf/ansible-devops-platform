@@ -30,7 +30,7 @@
 <h2 class="section-title">Servers</h2>
 <div class="table-wrap">
   <table>
-    <thead><tr><th>Name</th><th>Address</th><th>Client</th><th>Environment</th><th>Groups</th><th>Status</th><th class="col-actions"></th></tr></thead>
+    <thead><tr><th>Name</th><th>Address</th><th>Client</th><th>Environment</th><th>Status</th><th class="col-actions"></th></tr></thead>
     <tbody>
       {% for s in recent_servers %}
       <tr>
@@ -38,7 +38,6 @@
         <td class="mono muted">{{ s.ansible_host }}:{{ s.ssh_port }}</td>
         <td>{% if s.client %}<span class="tag">{{ s.client.name }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
         <td>{% if s.environment %}<span class="tag tag--info">{{ s.environment.name }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
-        <td>{% for g in s.groups.all %}<span class="tag">{{ g.name }}</span>{% empty %}<span class="muted">—</span>{% endfor %}</td>
         <td>
           {% if s.status == "ONLINE" %}<span class="tag tag--ok">Online</span>
           {% elif s.status == "OFFLINE" %}<span class="tag tag--err">Offline</span>
@@ -61,7 +60,7 @@
         </td>
       </tr>
       {% empty %}
-      <tr><td colspan="7" class="empty">
+      <tr><td colspan="6" class="empty">
         No servers registered yet.<br>
         <span class="muted">Add one to start managing it with Ansible.</span>
       </td></tr>

@@ -73,7 +73,8 @@ Nothing below is marked available unless it exists in this repository today.
       play recap, exit code and output
 - ✓ Connection test per server, using Ansible's own ping / win_ping, updating
       the server's status and last successful connection
-- ✓ Workspace file explorer — browse the Ansible project as a folder tree,
+- ✓ Workspace file explorer — the one place the Ansible project is edited:
+      browse it as a folder tree,
       create, edit, rename and delete files and folders; YAML validated as
       what it is, so group_vars is not judged as a playbook
 - ✓ Audit trail interface at `/manage/audit/` — who did what, when and from

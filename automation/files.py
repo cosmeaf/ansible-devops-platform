@@ -62,6 +62,18 @@ def _back_to(path: str) -> str:
 @login_required
 @permission_required("automation.view_playbook", raise_exception=True)
 @require_GET
+def browse_playbooks(request):
+    """The playbooks, in the explorer.
+
+    Kept as its own URL because that is where the link and any bookmark point;
+    a second screen listing the same files was the duplication, not the route.
+    """
+    return redirect(_back_to(workspace.PLAYBOOK_DIR))
+
+
+@login_required
+@permission_required("automation.view_playbook", raise_exception=True)
+@require_GET
 def browse(request):
     """The explorer: a tree of the workspace and one directory's contents."""
     path = request.GET.get("path", "").strip("/")
