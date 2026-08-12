@@ -163,7 +163,9 @@ def test_an_import_playbook_entry_is_accepted():
 
 @pytest.fixture
 def author(db):
-    user = get_user_model().objects.create_user("author", password="fixture-password-not-a-secret-1")
+    user = get_user_model().objects.create_user(
+        "author", password="fixture-password-not-a-secret-1"
+    )
     user.user_permissions.add(
         *Permission.objects.filter(
             content_type__app_label="automation",
@@ -183,7 +185,9 @@ def test_the_list_needs_a_signed_in_user(client, ws):
 
 
 def test_a_user_without_permission_is_refused(client, ws, db):
-    nobody = get_user_model().objects.create_user("nobody", password="fixture-password-not-a-secret-1")
+    nobody = get_user_model().objects.create_user(
+        "nobody", password="fixture-password-not-a-secret-1"
+    )
     client.force_login(nobody)
 
     assert client.get(reverse("automation:playbooks")).status_code == 403

@@ -148,7 +148,9 @@ def test_the_runner_never_lets_ssh_wait_for_an_answer(workspace):
 
 @pytest.fixture
 def operator(db):
-    user = get_user_model().objects.create_user("trust-op", password="fixture-password-not-a-secret-1")
+    user = get_user_model().objects.create_user(
+        "trust-op", password="fixture-password-not-a-secret-1"
+    )
     user.user_permissions.add(
         *Permission.objects.filter(content_type__app_label="jobs"),
         Permission.objects.get(codename="change_server"),

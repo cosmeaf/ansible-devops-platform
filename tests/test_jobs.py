@@ -311,7 +311,9 @@ def test_a_windows_host_is_tested_with_win_ping(db):
 
 @pytest.fixture
 def operator(db):
-    user = get_user_model().objects.create_user("operator", password="fixture-password-not-a-secret-1")
+    user = get_user_model().objects.create_user(
+        "operator", password="fixture-password-not-a-secret-1"
+    )
     user.user_permissions.add(
         *Permission.objects.filter(content_type__app_label="jobs"),
         Permission.objects.get(codename="change_server"),

@@ -147,7 +147,9 @@ def author(db):
 
 
 def test_browsing_needs_permission(client, ws, db):
-    nobody = get_user_model().objects.create_user("nobody2", password="fixture-password-not-a-secret-1")
+    nobody = get_user_model().objects.create_user(
+        "nobody2", password="fixture-password-not-a-secret-1"
+    )
     client.force_login(nobody)
 
     assert client.get(reverse("automation:browse")).status_code == 403

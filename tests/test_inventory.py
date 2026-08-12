@@ -152,7 +152,9 @@ def test_the_command_rejects_an_unknown_environment(fleet):
 
 @pytest.fixture
 def viewer(db):
-    user = get_user_model().objects.create_user("viewer", password="fixture-password-not-a-secret-1")
+    user = get_user_model().objects.create_user(
+        "viewer", password="fixture-password-not-a-secret-1"
+    )
     user.user_permissions.add(Permission.objects.get(codename="view_server"))
     return user
 

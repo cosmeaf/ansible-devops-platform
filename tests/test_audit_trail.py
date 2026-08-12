@@ -12,14 +12,18 @@ from infrastructure.models import Server, ServerGroup
 
 @pytest.fixture
 def auditor(db):
-    user = get_user_model().objects.create_user("auditor", password="fixture-password-not-a-secret-1")
+    user = get_user_model().objects.create_user(
+        "auditor", password="fixture-password-not-a-secret-1"
+    )
     user.user_permissions.add(Permission.objects.get(codename="view_auditevent"))
     return user
 
 
 @pytest.fixture
 def manager(db):
-    user = get_user_model().objects.create_user("manager2", password="fixture-password-not-a-secret-1")
+    user = get_user_model().objects.create_user(
+        "manager2", password="fixture-password-not-a-secret-1"
+    )
     user.user_permissions.add(*Permission.objects.filter(content_type__app_label="infrastructure"))
     return user
 
@@ -45,7 +49,9 @@ def test_the_trail_needs_a_signed_in_user(client, db):
 
 
 def test_a_user_without_the_permission_cannot_read_it(client, db):
-    nobody = get_user_model().objects.create_user("nosy", password="fixture-password-not-a-secret-1")
+    nobody = get_user_model().objects.create_user(
+        "nosy", password="fixture-password-not-a-secret-1"
+    )
     client.force_login(nobody)
 
     assert client.get(reverse("audit:trail")).status_code == 403

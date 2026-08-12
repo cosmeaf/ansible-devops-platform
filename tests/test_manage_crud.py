@@ -13,7 +13,9 @@ from infrastructure.models import Client, Environment, Server, ServerGroup
 @pytest.fixture
 def manager(db):
     """A user holding every infrastructure and credential permission."""
-    user = get_user_model().objects.create_user("manager", password="fixture-password-not-a-secret-1")
+    user = get_user_model().objects.create_user(
+        "manager", password="fixture-password-not-a-secret-1"
+    )
     user.user_permissions.add(
         *Permission.objects.filter(content_type__app_label__in=["infrastructure", "credentials"])
     )
@@ -227,7 +229,9 @@ def test_a_deletion_is_recorded_in_the_audit_trail(logged_in):
 
 
 def test_a_reader_cannot_delete(client, db):
-    reader = get_user_model().objects.create_user("reader", password="fixture-password-not-a-secret-1")
+    reader = get_user_model().objects.create_user(
+        "reader", password="fixture-password-not-a-secret-1"
+    )
     reader.user_permissions.add(Permission.objects.get(codename="view_servergroup"))
     group = ServerGroup.objects.create(name="webservers")
     client.force_login(reader)
@@ -239,7 +243,9 @@ def test_a_reader_cannot_delete(client, db):
 
 
 def test_a_reader_sees_no_delete_link(client, db):
-    reader = get_user_model().objects.create_user("reader2", password="fixture-password-not-a-secret-1")
+    reader = get_user_model().objects.create_user(
+        "reader2", password="fixture-password-not-a-secret-1"
+    )
     reader.user_permissions.add(Permission.objects.get(codename="view_servergroup"))
     group = ServerGroup.objects.create(name="webservers")
     client.force_login(reader)
@@ -321,7 +327,9 @@ def test_an_operator_cannot_change_the_platform_internals(operator_account):
 def test_a_viewer_still_cannot_delete(client, db, seeded_roles):
     from authentication.models import Role, UserRole
 
-    user = get_user_model().objects.create_user("looker", password="fixture-password-not-a-secret-1")
+    user = get_user_model().objects.create_user(
+        "looker", password="fixture-password-not-a-secret-1"
+    )
     UserRole.objects.create(user=user, role=Role.objects.get(slug="viewer"))
 
     assert user.has_perm("infrastructure.view_server") is True
