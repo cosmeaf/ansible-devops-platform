@@ -29,7 +29,7 @@
 
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Name</th><th>Size</th><th>Modified</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Size</th><th>Modified</th><th class="col-actions"></th></tr></thead>
         <tbody>
           {% if path %}
           <tr>
@@ -52,16 +52,16 @@
             </td>
             <td class="mono muted">{% if entry.is_dir %}—{% else %}{{ entry.size }} B{% endif %}</td>
             <td class="mono muted">{{ entry.modified|date:"Y-m-d H:i" }}</td>
-            <td>
+            <td class="col-actions">
               <div class="row-actions">
                 {% if entry.editable and perms.automation.change_playbook %}
-                  <a href="{% url 'automation:edit' %}?path={{ entry.path }}">Edit</a>
+                  {% include "manage/_action.html" with icon="edit" label="Edit" url="/manage/playbooks/files/edit/?path="|add:entry.path %}
                 {% endif %}
                 {% if perms.automation.change_playbook %}
-                  <a href="{% url 'automation:rename' %}?path={{ entry.path }}">Rename</a>
+                  {% include "manage/_action.html" with icon="rename" label="Rename" url="/manage/playbooks/files/rename/?path="|add:entry.path %}
                 {% endif %}
                 {% if perms.automation.delete_playbook %}
-                  <a href="{% url 'automation:delete' %}?path={{ entry.path }}" class="is-danger">Delete</a>
+                  {% include "manage/_action.html" with icon="delete" label="Delete" url="/manage/playbooks/files/delete/?path="|add:entry.path danger=1 %}
                 {% endif %}
               </div>
             </td>

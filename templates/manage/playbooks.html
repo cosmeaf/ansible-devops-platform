@@ -12,7 +12,7 @@
 
 <div class="table-wrap">
   <table>
-    <thead><tr><th>Playbook</th><th>Size</th><th>Last modified</th><th></th></tr></thead>
+    <thead><tr><th>Playbook</th><th>Size</th><th>Last modified</th><th class="col-actions"></th></tr></thead>
     <tbody>
       {% for p in playbooks %}
       <tr>
@@ -25,10 +25,16 @@
         </td>
         <td class="mono muted">{{ p.size }} B</td>
         <td class="mono muted">{{ p.modified|date:"Y-m-d H:i" }}</td>
-        <td>
+        <td class="col-actions">
           <div class="row-actions">
-            {% if perms.automation.change_playbook %}<a href="{% url 'automation:playbook-edit' p.name %}">Edit</a>{% endif %}
-            {% if perms.automation.delete_playbook %}<a href="{% url 'automation:playbook-delete' p.name %}" class="is-danger">Delete</a>{% endif %}
+            {% if perms.automation.change_playbook %}
+              {% url 'automation:playbook-edit' p.name as edit_url %}
+              {% include "manage/_action.html" with icon="edit" label="Edit" url=edit_url %}
+            {% endif %}
+            {% if perms.automation.delete_playbook %}
+              {% url 'automation:playbook-delete' p.name as delete_url %}
+              {% include "manage/_action.html" with icon="delete" label="Delete" url=delete_url danger=1 %}
+            {% endif %}
           </div>
         </td>
       </tr>

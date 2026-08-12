@@ -12,7 +12,7 @@
 
 <div class="table-wrap">
   <table>
-    <thead><tr><th>Group</th><th>Slug</th><th>Description</th><th>Members</th><th></th></tr></thead>
+    <thead><tr><th>Group</th><th>Slug</th><th>Description</th><th>Members</th><th class="col-actions"></th></tr></thead>
     <tbody>
       {% for g in page %}
       <tr>
@@ -20,10 +20,16 @@
         <td class="mono muted">{{ g.slug }}</td>
         <td class="muted">{{ g.description|default:"—"|truncatechars:70 }}</td>
         <td class="mono">{{ g.server_total }}</td>
-        <td>
+        <td class="col-actions">
           <div class="row-actions">
-            {% if perms.infrastructure.change_servergroup %}<a href="{% url 'manage:group-edit' g.uuid %}">Edit</a>{% endif %}
-            {% if perms.infrastructure.delete_servergroup %}<a href="{% url 'manage:group-delete' g.uuid %}" class="is-danger">Delete</a>{% endif %}
+            {% if perms.infrastructure.change_servergroup %}
+              {% url 'manage:group-edit' g.uuid as edit_url %}
+              {% include "manage/_action.html" with icon="edit" label="Edit" url=edit_url %}
+            {% endif %}
+            {% if perms.infrastructure.delete_servergroup %}
+              {% url 'manage:group-delete' g.uuid as delete_url %}
+              {% include "manage/_action.html" with icon="delete" label="Delete" url=delete_url danger=1 %}
+            {% endif %}
           </div>
         </td>
       </tr>
