@@ -39,7 +39,7 @@
 <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>Name</th><th>Address</th><th>Via</th><th>OS</th><th>Client</th><th>Environment</th><th>Groups</th><th>Status</th><th></th></tr>
+      <tr><th>Name</th><th>Address</th><th>Via</th><th>OS</th><th>Client</th><th>Environment</th><th>Groups</th><th>Status</th><th class="col-actions"></th></tr>
     </thead>
     <tbody>
       {% for s in page %}
@@ -57,11 +57,18 @@
           {% elif s.status == "ERROR" %}<span class="tag tag--err">Error</span>
           {% else %}<span class="tag">Unknown</span>{% endif %}
         </td>
-        <td>
+        <td class="col-actions">
           <div class="row-actions">
-            <a href="{% url 'manage:server-detail' s.uuid %}">View</a>
-            {% if perms.infrastructure.change_server %}<a href="{% url 'manage:server-edit' s.uuid %}">Edit</a>{% endif %}
-            {% if perms.infrastructure.delete_server %}<a href="{% url 'manage:server-delete' s.uuid %}" class="is-danger">Delete</a>{% endif %}
+            {% url 'manage:server-detail' s.uuid as detail_url %}
+            {% include "manage/_action.html" with icon="view" label="View" url=detail_url %}
+            {% if perms.infrastructure.change_server %}
+              {% url 'manage:server-edit' s.uuid as edit_url %}
+              {% include "manage/_action.html" with icon="edit" label="Edit" url=edit_url %}
+            {% endif %}
+            {% if perms.infrastructure.delete_server %}
+              {% url 'manage:server-delete' s.uuid as delete_url %}
+              {% include "manage/_action.html" with icon="delete" label="Delete" url=delete_url danger=1 %}
+            {% endif %}
           </div>
         </td>
       </tr>

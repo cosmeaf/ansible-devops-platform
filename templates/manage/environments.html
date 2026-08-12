@@ -12,7 +12,7 @@
 
 <div class="table-wrap">
   <table>
-    <thead><tr><th>Name</th><th>Slug</th><th>Description</th><th>Servers</th><th>Check mode</th><th>Active</th><th></th></tr></thead>
+    <thead><tr><th>Name</th><th>Slug</th><th>Description</th><th>Servers</th><th>Check mode</th><th>Active</th><th class="col-actions"></th></tr></thead>
     <tbody>
       {% for e in page %}
       <tr>
@@ -22,10 +22,16 @@
         <td class="mono">{{ e.server_total }}</td>
         <td>{% if e.require_check_mode %}<span class="tag tag--warn">Enforced</span>{% else %}<span class="tag">Optional</span>{% endif %}</td>
         <td>{% if e.active %}<span class="tag tag--ok">Active</span>{% else %}<span class="tag">Inactive</span>{% endif %}</td>
-        <td>
+        <td class="col-actions">
           <div class="row-actions">
-            {% if perms.infrastructure.change_environment %}<a href="{% url 'manage:environment-edit' e.uuid %}">Edit</a>{% endif %}
-            {% if perms.infrastructure.delete_environment %}<a href="{% url 'manage:environment-delete' e.uuid %}" class="is-danger">Delete</a>{% endif %}
+            {% if perms.infrastructure.change_environment %}
+              {% url 'manage:environment-edit' e.uuid as edit_url %}
+              {% include "manage/_action.html" with icon="edit" label="Edit" url=edit_url %}
+            {% endif %}
+            {% if perms.infrastructure.delete_environment %}
+              {% url 'manage:environment-delete' e.uuid as delete_url %}
+              {% include "manage/_action.html" with icon="delete" label="Delete" url=delete_url danger=1 %}
+            {% endif %}
           </div>
         </td>
       </tr>

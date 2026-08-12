@@ -23,7 +23,7 @@
 <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>Job</th><th>Mode</th><th>Scope</th><th>Requested by</th><th>Started</th><th>Status</th><th></th></tr>
+      <tr><th>Job</th><th>Mode</th><th>Scope</th><th>Requested by</th><th>Started</th><th>Status</th><th class="col-actions"></th></tr>
     </thead>
     <tbody>
       {% for job in page %}
@@ -47,10 +47,14 @@
           {% elif job.status == "RUNNING" %}<span class="tag tag--info">Running</span>
           {% else %}<span class="tag">{{ job.get_status_display }}</span>{% endif %}
         </td>
-        <td>
+        <td class="col-actions">
           <div class="row-actions">
-            <a href="{% url 'jobs:detail' job.uuid %}">View</a>
-            {% if perms.jobs.delete_job %}<a href="{% url 'jobs:delete' job.uuid %}" class="is-danger">Delete</a>{% endif %}
+            {% url 'jobs:detail' job.uuid as detail_url %}
+            {% include "manage/_action.html" with icon="view" label="View" url=detail_url %}
+            {% if perms.jobs.delete_job %}
+              {% url 'jobs:delete' job.uuid as delete_url %}
+              {% include "manage/_action.html" with icon="delete" label="Delete" url=delete_url danger=1 %}
+            {% endif %}
           </div>
         </td>
       </tr>
