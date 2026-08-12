@@ -166,7 +166,9 @@ def overview(request):
                 "online": servers.filter(status=ServerStatus.ONLINE).count(),
                 "untested": servers.filter(status=ServerStatus.UNKNOWN).count(),
             },
-            "recent_servers": servers.select_related("environment", "client")[:8],
+            "recent_servers": servers.select_related("environment", "client").prefetch_related(
+                "groups"
+            )[:8],
         },
     )
 

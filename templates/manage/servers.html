@@ -4,13 +4,11 @@
 {% block subheading %}Hosts Ansible manages. Each becomes an inventory entry.{% endblock %}
 
 {% block content %}
-{% if perms.infrastructure.add_server %}
 <div class="toolbar">
-  <a href="{% url 'manage:server-create' %}" class="btn" style="width:auto;text-decoration:none">Register a server</a>
-</div>
-{% endif %}
-
-<form class="toolbar" method="get">
+  {% if perms.infrastructure.add_server %}
+    <a href="{% url 'manage:server-create' %}" class="btn" style="width:auto;text-decoration:none">Register a server</a>
+  {% endif %}
+  <form class="toolbar__filters" method="get">
   <input type="search" name="q" value="{{ q }}" placeholder="Filter by name…">
   <select name="environment">
     <option value="">All environments</option>
@@ -31,10 +29,11 @@
     {% endfor %}
   </select>
   <button type="submit" class="btn btn--ghost">Filter</button>
-  {% if q or selected_environment or selected_status %}
-    <a href="{% url 'manage:servers' %}" class="muted">Clear</a>
-  {% endif %}
-</form>
+    {% if q or selected_environment or selected_status or selected_client %}
+      <a href="{% url 'manage:servers' %}" class="muted">Clear</a>
+    {% endif %}
+  </form>
+</div>
 
 <div class="table-wrap">
   <table>

@@ -369,7 +369,11 @@
       .tag--warn { background: #2b1d05; color: #f5b544; border-color: #5c3d0a; }
     }
 
+    /* One row at the top of every list: the primary action first, then the
+       filters, all starting at the same left edge. Three different shapes
+       across nine screens is what made them look unrelated. */
     .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+    .toolbar__filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0; }
     .toolbar select {
       padding: 7px 11px; font-family: inherit; font-size: 13.5px;
       color: var(--text); background: var(--surface);

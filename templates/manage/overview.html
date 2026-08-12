@@ -30,23 +30,38 @@
 <h2 class="section-title">Servers</h2>
 <div class="table-wrap">
   <table>
-    <thead><tr><th>Name</th><th>Address</th><th>Environment</th><th>OS</th><th>Status</th></tr></thead>
+    <thead><tr><th>Name</th><th>Address</th><th>Client</th><th>Environment</th><th>Groups</th><th>Status</th><th class="col-actions"></th></tr></thead>
     <tbody>
       {% for s in recent_servers %}
       <tr>
         <td><a href="{% url 'manage:server-detail' s.uuid %}"><b>{{ s.name }}</b></a></td>
         <td class="mono muted">{{ s.ansible_host }}:{{ s.ssh_port }}</td>
+        <td>{% if s.client %}<span class="tag">{{ s.client.name }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
         <td>{% if s.environment %}<span class="tag tag--info">{{ s.environment.name }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
-        <td class="muted">{{ s.get_operating_system_display }}</td>
+        <td>{% for g in s.groups.all %}<span class="tag">{{ g.name }}</span>{% empty %}<span class="muted">—</span>{% endfor %}</td>
         <td>
           {% if s.status == "ONLINE" %}<span class="tag tag--ok">Online</span>
           {% elif s.status == "OFFLINE" %}<span class="tag tag--err">Offline</span>
           {% elif s.status == "ERROR" %}<span class="tag tag--err">Error</span>
           {% else %}<span class="tag">Unknown</span>{% endif %}
         </td>
+        <td class="col-actions">
+          <div class="row-actions">
+            {% url 'manage:server-detail' s.uuid as detail_url %}
+            {% include "manage/_action.html" with icon="view" label="View" url=detail_url %}
+            {% if perms.infrastructure.change_server %}
+              {% url 'manage:server-edit' s.uuid as edit_url %}
+              {% include "manage/_action.html" with icon="edit" label="Edit" url=edit_url %}
+            {% endif %}
+            {% if perms.infrastructure.delete_server %}
+              {% url 'manage:server-delete' s.uuid as delete_url %}
+              {% include "manage/_action.html" with icon="delete" label="Delete" url=delete_url danger=1 %}
+            {% endif %}
+          </div>
+        </td>
       </tr>
       {% empty %}
-      <tr><td colspan="5" class="empty">
+      <tr><td colspan="7" class="empty">
         No servers registered yet.<br>
         <span class="muted">Add one to start managing it with Ansible.</span>
       </td></tr>
