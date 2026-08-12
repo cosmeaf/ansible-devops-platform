@@ -140,15 +140,111 @@ production before you trust the platform.
 
 ---
 
+## Server detail
+
+![A server](images/manage-server-detail.png)
+
+Everything known about one host, and the actions that act on it: edit, delete,
+and **test connection**, which runs Ansible's own `ping` (or `win_ping` for
+WinRM) and records the result.
+
+Ansible refuses to connect to a host whose key it has never seen, so a server
+whose host key has not been accepted says so here rather than letting a run
+time out for reasons nobody can see. Reviewing the fingerprint shows what the
+host offered, next to the command that prints the same fingerprint on the
+machine itself. Accepting it is recorded in the audit trail; forgetting it is
+possible too, for a host that was legitimately rebuilt.
+
+The page also carries that server's own history — who changed it, and when.
+
+---
+
+## Files
+
+![Workspace](images/manage-files.png)
+
+The Ansible project as it exists on disk: a folder tree, and a listing you can
+walk into. Create, edit, rename and delete **files and folders** — `playbooks/`,
+`roles/`, `group_vars/`, `host_vars/`, `inventories/`, `ansible.cfg`.
+
+Nothing here is a proprietary format. The workspace is a standard Ansible
+layout, and everything written through the editor keeps working with plain
+`ansible-playbook` if the platform disappears.
+
+YAML is validated before it is written, as what it actually is: a file under
+`playbooks/` must be a list of plays, while `group_vars/all.yml` only has to
+parse. Deleting a folder says how many files would go before it takes them.
+
+---
+
+## Playbooks
+
+![Playbooks](images/manage-playbooks.png)
+
+The same files, filtered to the playbooks, for when that is all you want to
+see.
+
+---
+
+## Inventory
+
+![Inventory](images/manage-inventory.png)
+
+The registered servers rendered as a standard Ansible YAML inventory, with the
+group tree `ansible-inventory --graph` would print. Download it and it runs
+anywhere Ansible does.
+
+Environments appear as `env_*` groups and clients as `client_*`, so either can
+be used with `--limit` without colliding with a group someone defined.
+
+---
+
+## Jobs
+
+![Running a playbook](images/manage-job-run.png)
+
+Every execution is a job. Choose the playbook, narrow the scope by
+environment, client or group, and add `--limit`, tags and extra vars.
+
+**Check mode is on by default.** A dry run is the safe thing to reach for, so
+turning it off is a decision rather than an omission. A run whose filters
+resolve to no server is refused: an empty selection is a filter mistake, not a
+job worth queueing.
+
+![Jobs](images/manage-jobs.png)
+
+The job page shows the play recap per host, the exit code and the output, and
+follows a run while it is still going. Execution happens on a Celery worker
+through Ansible Runner, never in the request.
+
+---
+
+## Audit trail
+
+![Audit trail](images/manage-audit.png)
+
+Who did what, when, and from where — filterable by person, action, module and
+resource. Recording an action nobody can look at answers no question, which is
+why this is product surface rather than something only a database client can
+reach.
+
+Every event can be opened in full, showing what the value was before and after,
+and the other events recorded against the same resource. Deletions record what
+was removed: there is no "after" for a deletion.
+
+The trail is read-only by construction. No role grants the right to delete an
+audit event, administrators included.
+
+---
+
 ## Platform internals
 
-Audit, security events, IP intelligence, platform settings, users and roles are
-managed in **Django Admin** at `/admin/`, restricted to accounts whose role
-grants admin access.
+Security events, IP intelligence, platform settings, users and roles are managed
+in **Django Admin** at `/admin/`, restricted to accounts whose role grants admin
+access.
 
 They are operator concerns, not part of managing Ansible, which is why they are
-not in the product surface. The audit trail remains read-only even there — see
-[audit.md](audit.md).
+not in the product surface. See [audit.md](audit.md).
 
 ---
 

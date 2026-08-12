@@ -10,14 +10,16 @@ An open-source, self-hosted platform for DevOps automation and infrastructure
 management, powered by Ansible.
 
 > **Project status: Alpha — early development.**
-> Module 1 (Core Platform) is the only module implemented. This is not yet
-> suitable for production use.
+> The core platform and the Ansible module are implemented: infrastructure,
+> workspace, inventory generation and playbook execution all work end to end.
+> The web interface is server-rendered; the Next.js module is still planned.
+> Not yet suitable for production use.
 
 ![Ansible management](docs/images/manage-servers.png)
 
 <p align="center">
   <sub>Managing Ansible infrastructure from the platform.
-  <a href="docs/interface.md">More screenshots</a></sub>
+  <a href="docs/interface.md">Every screen</a></sub>
 </p>
 
 ---

@@ -55,9 +55,8 @@ db.sqlite3
 .DS_Store
 Thumbs.db
 
-# Agent tooling
+# Local tooling
 .tokensave/
-.claude/
 prompt.md
 MASTER_PROMPT.md
 workspace/
