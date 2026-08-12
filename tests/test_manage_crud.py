@@ -247,3 +247,82 @@ def test_a_reader_sees_no_delete_link(client, db):
     body = client.get(reverse("manage:groups")).content.decode()
 
     assert reverse("manage:group-delete", args=[group.uuid]) not in body
+
+
+# --- roles must actually let an operator operate -----------------------------
+
+
+@pytest.fixture
+def seeded_roles(db):
+    from django.core.management import call_command
+
+    call_command("seed_roles", verbosity=0)
+
+
+@pytest.fixture
+def operator_account(db, seeded_roles):
+    """A user holding the Operator role, as seed_users creates."""
+    from authentication.models import Role, UserRole
+
+    user = get_user_model().objects.create_user("op", password="fixture-password-not-a-secret-1")
+    UserRole.objects.create(user=user, role=Role.objects.get(slug="operator"))
+    return user
+
+
+@pytest.mark.parametrize(
+    "permission",
+    [
+        "infrastructure.delete_server",
+        "infrastructure.delete_servergroup",
+        "infrastructure.delete_environment",
+        "infrastructure.delete_client",
+        "credentials.delete_credential",
+        "automation.delete_playbook",
+        "jobs.delete_job",
+    ],
+)
+def test_an_operator_can_delete_what_they_operate(operator_account, permission):
+    """An operator who can register a server but never remove it is not one."""
+    assert operator_account.has_perm(permission) is True
+
+
+def test_an_operator_can_actually_reach_the_delete_screen(client, operator_account):
+    server = Server.objects.create(name="web01", primary_ip="198.51.100.10")
+    client.force_login(operator_account)
+
+    response = client.get(reverse("manage:server-delete", args=[server.uuid]))
+
+    assert response.status_code == 200
+
+
+def test_an_operator_sees_the_delete_link(client, operator_account):
+    server = Server.objects.create(name="web01", primary_ip="198.51.100.10")
+    client.force_login(operator_account)
+
+    body = client.get(reverse("manage:servers")).content.decode()
+
+    assert reverse("manage:server-delete", args=[server.uuid]) in body
+
+
+def test_nobody_is_granted_the_right_to_delete_the_audit_trail(seeded_roles):
+    """A trail somebody can erase is not a trail."""
+    from authentication.models import Role
+
+    for role in Role.objects.all():
+        assert not role.permissions.filter(codename="delete_auditevent").exists(), role.name
+
+
+def test_an_operator_cannot_change_the_platform_internals(operator_account):
+    assert operator_account.has_perm("audit.view_auditevent") is True
+    assert operator_account.has_perm("audit.add_auditevent") is False
+    assert operator_account.has_perm("authentication.add_role") is False
+
+
+def test_a_viewer_still_cannot_delete(client, db, seeded_roles):
+    from authentication.models import Role, UserRole
+
+    user = get_user_model().objects.create_user("looker", password="fixture-password-not-a-secret-1")
+    UserRole.objects.create(user=user, role=Role.objects.get(slug="viewer"))
+
+    assert user.has_perm("infrastructure.view_server") is True
+    assert user.has_perm("infrastructure.delete_server") is False
