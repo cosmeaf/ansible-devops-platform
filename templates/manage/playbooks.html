@@ -12,9 +12,9 @@
 
 <div class="table-wrap">
   <table>
-    <thead><tr><th>Playbook</th><th>Size</th><th>Last modified</th><th class="col-actions"></th></tr></thead>
+    <thead><tr><th>Name</th><th>Size</th><th>Last modified</th><th class="col-actions"></th></tr></thead>
     <tbody>
-      {% for p in playbooks %}
+      {% for p in page %}
       <tr>
         <td>
           {% if perms.automation.change_playbook %}
@@ -44,6 +44,7 @@
     </tbody>
   </table>
 </div>
+{% include "manage/_pager.html" %}
 
 <p class="muted" style="font-size:12.5px;margin-top:14px">
   Workspace: <span class="mono">{{ workspace }}/playbooks/</span> — these are real files.

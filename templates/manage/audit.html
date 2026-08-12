@@ -29,12 +29,12 @@
 <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>When</th><th>Who</th><th>Action</th><th>Module</th><th>Resource</th><th>From</th><th>Result</th></tr>
+      <tr><th>When</th><th>Who</th><th>Action</th><th>Module</th><th>Resource</th><th>From</th><th>Result</th><th class="col-actions"></th></tr>
     </thead>
     <tbody>
       {% for e in page %}
       <tr>
-        <td class="mono muted"><a href="{% url 'audit:event' e.uuid %}">{{ e.created_at|date:"Y-m-d H:i:s" }}</a></td>
+        <td class="mono muted">{{ e.created_at|date:"Y-m-d H:i:s" }}</td>
         <td><b>{{ e.username_snapshot|default:"anonymous" }}</b></td>
         <td>
           {% if e.action == "DELETE" %}<span class="tag tag--err">Delete</span>
@@ -49,9 +49,15 @@
           {% if e.result == "SUCCESS" %}<span class="tag tag--ok">Success</span>
           {% else %}<span class="tag tag--err">{{ e.get_result_display }}</span>{% endif %}
         </td>
+        <td class="col-actions">
+          <div class="row-actions">
+            {% url 'audit:event' e.uuid as detail_url %}
+            {% include "manage/_action.html" with icon="view" label="View" url=detail_url %}
+          </div>
+        </td>
       </tr>
       {% empty %}
-      <tr><td colspan="7" class="empty">No events match.</td></tr>
+      <tr><td colspan="8" class="empty">No events match.</td></tr>
       {% endfor %}
     </tbody>
   </table>

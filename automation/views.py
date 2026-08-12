@@ -7,6 +7,7 @@ write is audited the same way a change through the API would be.
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
+from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET
@@ -24,6 +25,8 @@ from .workspace import (
     validate,
     write_playbook,
 )
+
+PAGE_SIZE = 25
 
 
 def _audit(request, action, name, *, result=AuditResult.SUCCESS):
@@ -53,7 +56,7 @@ def playbooks(request):
         "manage/playbooks.html",
         {
             "section": "playbooks",
-            "playbooks": list_playbooks(),
+            "page": Paginator(list_playbooks(), PAGE_SIZE).get_page(request.GET.get("page")),
             "workspace": root(),
         },
     )
