@@ -11,6 +11,7 @@ name like ``../../etc/cron.d/x`` is refused rather than followed.
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 from dataclasses import dataclass
@@ -147,12 +148,13 @@ def playbook_path(name: str) -> Path:
     if not name.endswith(PLAYBOOK_SUFFIXES):
         raise NotAPlaybook("A playbook must be a .yml or .yaml file.")
 
-    base = (root() / PLAYBOOK_DIR).resolve()
-    candidate = (base / name).resolve()
-    # resolve() collapses symlinks and traversal, so this is the real check.
-    if not candidate.is_relative_to(base):
+    base = os.path.realpath(root() / PLAYBOOK_DIR)
+    candidate = os.path.realpath(os.path.join(base, name))
+    # realpath collapses symlinks and traversal; the prefix check is the whole
+    # guarantee, written so it is obvious that nothing outside can be reached.
+    if not candidate.startswith(base + os.sep):
         raise UnsafePath(f"{name!r} is outside the workspace.")
-    return candidate
+    return Path(candidate)
 
 
 def list_playbooks() -> list[PlaybookFile]:
@@ -284,11 +286,16 @@ def resolve(relative: str, *, allow_root: bool = False) -> Path:
     if not _SAFE_NAME.match(relative) or ".." in relative.split("/"):
         raise UnsafePath(f"{relative!r} is not a valid path.")
 
-    candidate = (base / relative).resolve()
-    # resolve() collapses symlinks and traversal, so this is the real check.
-    if not candidate.is_relative_to(base) or candidate == base:
+    # realpath collapses symlinks and traversal; the prefix check is then the
+    # whole guarantee, and is written explicitly so it is obvious — and
+    # checkable by a scanner — that nothing outside the root can be reached.
+    root = os.path.realpath(base)
+    candidate = os.path.realpath(os.path.join(root, relative))
+    if candidate != root and not candidate.startswith(root + os.sep):
         raise UnsafePath(f"{relative!r} is outside the workspace.")
-    return candidate
+    if candidate == root:
+        raise UnsafePath(f"{relative!r} resolves to the workspace root.")
+    return Path(candidate)
 
 
 def relative_to_root(path: Path) -> str:

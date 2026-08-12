@@ -96,7 +96,9 @@ def test_deleting_a_folder_removes_everything_under_it(ws):
     workspace.write_file("roles/nginx/tasks/main.yml", PLAY)
     workspace.write_file("roles/nginx/handlers/main.yml", PLAY)
 
-    assert workspace.delete("roles/nginx") == 2
+    removed = workspace.delete("roles/nginx")
+
+    assert removed == 2
     assert not (ws / "roles" / "nginx").exists()
 
 

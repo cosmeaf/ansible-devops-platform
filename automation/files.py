@@ -7,6 +7,8 @@ with the person who did it, because "who deleted roles/nginx" is a question
 someone will eventually ask.
 """
 
+from urllib.parse import urlencode
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import redirect, render
@@ -43,8 +45,18 @@ def _parent_of(path: str) -> str:
     return path.rsplit("/", 1)[0] if "/" in path else ""
 
 
+def _url_for(route: str, path: str) -> str:
+    """Build a workspace URL with the path encoded.
+
+    A path holding & or # would otherwise cut the querystring short and send
+    the browser somewhere nobody asked for.
+    """
+    base = reverse(route)
+    return f"{base}?{urlencode({'path': path})}" if path else base
+
+
 def _back_to(path: str) -> str:
-    return f"{reverse('automation:browse')}?path={path}" if path else reverse("automation:browse")
+    return _url_for("automation:browse", path)
 
 
 @login_required
@@ -105,7 +117,7 @@ def edit(request):
             workspace.write_file(path, content)
             _audit(request, AuditAction.UPDATE, path, detail={"bytes": len(content)})
             messages.success(request, f"{path} saved.")
-            return redirect(f"{reverse('automation:edit')}?path={path}")
+            return redirect(_url_for("automation:edit", path))
     else:
         form = FileForm(initial={"content": current}, path=path)
 
@@ -135,7 +147,7 @@ def create_file(request):
             workspace.write_file(path, form.cleaned_data["content"])
             _audit(request, AuditAction.CREATE, path)
             messages.success(request, f"{path} created.")
-            return redirect(f"{reverse('automation:edit')}?path={path}")
+            return redirect(_url_for("automation:edit", path))
     else:
         form = FileForm(parent=parent, naming=True)
 
