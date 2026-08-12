@@ -30,6 +30,8 @@ import yaml
 from credentials.models import CredentialType
 from inventory.builder import to_yaml
 
+from .known_hosts import known_hosts_path
+
 #: Ansible's own vocabulary for how a run ended.
 SUCCESSFUL = "successful"
 FAILED = "failed"
@@ -166,6 +168,17 @@ def _execute(
             "envvars": {
                 "ANSIBLE_HOST_KEY_CHECKING": "True",
                 "ANSIBLE_RETRY_FILES_ENABLED": "False",
+                # BatchMode is not an optimisation. Without it ssh asks whether
+                # to accept an unknown host key and waits for an answer that a
+                # worker can never give, turning a refusal into a timeout.
+                # UserKnownHostsFile points at the keys a person has accepted;
+                # a host that is not in there fails immediately and says so.
+                "ANSIBLE_SSH_ARGS": (
+                    "-o BatchMode=yes "
+                    "-o StrictHostKeyChecking=yes "
+                    f"-o UserKnownHostsFile={known_hosts_path()} "
+                    "-o ControlMaster=auto -o ControlPersist=60s"
+                ),
                 # runner executes the ansible binaries by name. They live
                 # beside the interpreter running us, which is not on PATH when
                 # a worker was started from a virtualenv by absolute path.

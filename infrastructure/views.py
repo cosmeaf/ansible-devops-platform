@@ -205,7 +205,19 @@ def server_detail(request, uuid):
         ),
         uuid=uuid,
     )
-    return render(request, "manage/server_detail.html", {"section": "servers", "server": server})
+    from automation.known_hosts import is_trusted
+
+    return render(
+        request,
+        "manage/server_detail.html",
+        {
+            "section": "servers",
+            "server": server,
+            # Ansible refuses a host whose key was never accepted, so the page
+            # should say so before someone wonders why a run timed out.
+            "host_key_trusted": is_trusted(server.ansible_host, server.ssh_port),
+        },
+    )
 
 
 @login_required

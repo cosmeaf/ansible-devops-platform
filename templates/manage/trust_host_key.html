@@ -1,0 +1,46 @@
+{% extends "manage/_shell.html" %}
+{% block title %}Trust {{ server.name }} — Ansible DevOps Platform{% endblock %}
+{% block heading %}Accept this host key?{% endblock %}
+{% block subheading %}Ansible will not connect to a host whose key it has never seen.{% endblock %}
+
+{% block content %}
+<form method="post" class="card" style="max-width:680px">
+  {% csrf_token %}
+
+  <p style="margin-top:0">
+    <b>{{ server.name }}</b> at <span class="mono">{{ server.ansible_host }}:{{ server.ssh_port }}</span>
+    offered the key{{ keys|length|pluralize }} below.
+  </p>
+
+  <div class="table-wrap" style="margin:14px 0">
+    <table>
+      <thead><tr><th>Type</th><th>Fingerprint</th></tr></thead>
+      <tbody>
+        {% for key in keys %}
+        <tr>
+          <td class="mono">{{ key.key_type }}</td>
+          <td class="mono">{{ key.fingerprint }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="alert" role="alert">
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM7.25 4.5h1.5v5h-1.5v-5zm0 6.25h1.5v1.5h-1.5v-1.5z"/>
+    </svg>
+    <span>
+      Compare this against the fingerprint the machine itself reports, with
+      <span class="mono">ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub</span>.
+      Accepting a key you have not checked is accepting whatever answered.
+    </span>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-top:22px">
+    <button type="submit" class="btn" style="width:auto">Accept and trust</button>
+    <a href="{% url 'manage:server-detail' server.uuid %}" class="btn btn--ghost"
+       style="text-decoration:none">Cancel</a>
+  </div>
+</form>
+{% endblock %}
