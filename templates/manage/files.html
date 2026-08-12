@@ -1,0 +1,117 @@
+{% extends "manage/_shell.html" %}
+{% block title %}Files — Ansible DevOps Platform{% endblock %}
+{% block heading %}Workspace{% endblock %}
+{% block subheading %}The Ansible project on disk. Real files, real folders.{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+  {% if perms.automation.add_playbook %}
+    <a href="{% url 'automation:create-file' %}?path={{ path }}" class="btn" style="width:auto;text-decoration:none">New file</a>
+    <a href="{% url 'automation:create-folder' %}?path={{ path }}" class="btn btn--ghost" style="text-decoration:none">New folder</a>
+  {% endif %}
+</div>
+
+<div class="explorer">
+  <aside class="explorer__tree">
+    <div class="explorer__title">Explorer</div>
+    <a href="{% url 'automation:browse' %}" class="explorer__root {% if not path %}is-active{% endif %}">workspace/ansible</a>
+    {% include "manage/_file_tree.html" with nodes=tree %}
+  </aside>
+
+  <div class="explorer__main">
+    <div class="crumbs">
+      <a href="{% url 'automation:browse' %}">workspace</a>
+      {% for crumb in crumbs %}
+        <span class="crumbs__sep">/</span>
+        <a href="{% url 'automation:browse' %}?path={{ crumb.path }}">{{ crumb.name }}</a>
+      {% endfor %}
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Size</th><th>Modified</th><th></th></tr></thead>
+        <tbody>
+          {% if path %}
+          <tr>
+            <td colspan="4">
+              <a href="{% url 'automation:browse' %}?path={{ parent }}" class="muted">../</a>
+            </td>
+          </tr>
+          {% endif %}
+          {% for entry in entries %}
+          <tr>
+            <td>
+              {% if entry.is_dir %}
+                <a href="{% url 'automation:browse' %}?path={{ entry.path }}"><b class="mono">{{ entry.name }}/</b></a>
+              {% elif entry.editable and perms.automation.change_playbook %}
+                <a href="{% url 'automation:edit' %}?path={{ entry.path }}"><span class="mono">{{ entry.name }}</span></a>
+              {% else %}
+                <span class="mono muted">{{ entry.name }}</span>
+              {% endif %}
+              {% if entry.is_playbook %}<span class="tag tag--info">playbook</span>{% endif %}
+            </td>
+            <td class="mono muted">{% if entry.is_dir %}—{% else %}{{ entry.size }} B{% endif %}</td>
+            <td class="mono muted">{{ entry.modified|date:"Y-m-d H:i" }}</td>
+            <td>
+              <div class="row-actions">
+                {% if entry.editable and perms.automation.change_playbook %}
+                  <a href="{% url 'automation:edit' %}?path={{ entry.path }}">Edit</a>
+                {% endif %}
+                {% if perms.automation.change_playbook %}
+                  <a href="{% url 'automation:rename' %}?path={{ entry.path }}">Rename</a>
+                {% endif %}
+                {% if perms.automation.delete_playbook %}
+                  <a href="{% url 'automation:delete' %}?path={{ entry.path }}" class="is-danger">Delete</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="empty">This folder is empty.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="muted" style="font-size:12.5px;margin-top:12px">
+      <span class="mono">{{ root }}</span> — these files run with plain
+      <span class="mono">ansible-playbook</span>, with or without this platform.
+    </p>
+  </div>
+</div>
+
+<style>
+  .explorer { display: grid; grid-template-columns: 240px 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .explorer { grid-template-columns: 1fr; } }
+
+  .explorer__tree {
+    padding: 12px; font-size: 12.5px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    max-height: 70vh; overflow: auto;
+  }
+  .explorer__title {
+    font-size: 11px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
+  }
+  .explorer__root { display: block; font-family: var(--mono); font-size: 12px;
+                    color: var(--text); text-decoration: none; padding: 3px 4px; border-radius: 5px; }
+  .explorer__root.is-active { background: var(--accent-soft); color: var(--accent); }
+
+  .tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+  .tree ul { margin-left: 12px; border-left: 1px solid var(--border); padding-left: 8px; }
+  .tree a {
+    display: block; padding: 3px 4px; border-radius: 5px;
+    font-family: var(--mono); font-size: 12px;
+    color: var(--text-muted); text-decoration: none;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .tree a:hover { background: var(--bg); color: var(--text); }
+  .tree a.is-active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+  .crumbs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+            margin-bottom: 12px; font-family: var(--mono); font-size: 12.5px; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  .crumbs__sep { color: var(--text-muted); }
+</style>
+{% endblock %}

@@ -88,4 +88,26 @@
     </tbody>
   </table>
 </div>
+
+{% if history %}
+<div class="table-wrap" style="margin-top:16px">
+  <table>
+    <thead><tr><th colspan="4">History</th></tr></thead>
+    <tbody>
+      {% for e in history %}
+      <tr>
+        <td class="mono muted">
+          {% if perms.audit.view_auditevent %}
+            <a href="{% url 'audit:event' e.uuid %}">{{ e.created_at|date:"Y-m-d H:i:s" }}</a>
+          {% else %}{{ e.created_at|date:"Y-m-d H:i:s" }}{% endif %}
+        </td>
+        <td><b>{{ e.username_snapshot|default:"anonymous" }}</b></td>
+        <td><span class="tag">{{ e.get_action_display }}</span></td>
+        <td class="mono muted">{{ e.source_ip|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
 {% endblock %}

@@ -60,8 +60,8 @@ becomes a proprietary format.
 
 - [x] Inventory generation, compatible with standard Ansible inventories
 - [x] Playbook management (standard Ansible YAML)
-- [ ] Role management
-- [ ] Variable management
+- [x] Role management — as files; no scaffolding generator yet
+- [x] Variable management — group_vars and host_vars are editable
 - [ ] Monaco-based editor
 - [x] Ansible Runner integration
 - [x] Check mode (dry run)

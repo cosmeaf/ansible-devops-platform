@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from audit.models import AuditAction, AuditEvent, AuditResult
@@ -111,6 +112,44 @@ def job_create(request):
         form = RunPlaybookForm(initial={"check_mode": True})
 
     return render(request, "manage/job_run.html", {"section": "jobs", "form": form})
+
+
+@login_required
+@permission_required("jobs.delete_job", raise_exception=True)
+def job_delete(request, uuid):
+    """Remove a job from the history, recording what was removed."""
+    job = get_object_or_404(Job, uuid=uuid)
+
+    if request.method == "POST":
+        label, status = job.label, job.status
+        AuditEvent.objects.create(
+            user=request.user,
+            username_snapshot=request.user.get_username(),
+            request_id=getattr(request, "request_id", "") or "",
+            session_id=request.session.session_key or "",
+            source_ip=request.META.get("REMOTE_ADDR") or None,
+            module="jobs",
+            resource_type="Job",
+            resource_id=str(job.uuid),
+            action=AuditAction.DELETE,
+            previous_value={"job": label, "status": status, "playbook": job.playbook},
+            result=AuditResult.SUCCESS,
+            user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
+        )
+        job.delete()
+        messages.success(request, f"{label} removed from the history.")
+        return redirect("jobs:list")
+
+    return render(
+        request,
+        "manage/confirm_delete.html",
+        {
+            "what": "job",
+            "label": f"{job.label} ({job.get_status_display()})",
+            "blocked_by": "The run itself already happened. Only the record goes.",
+            "cancel_url": reverse("jobs:detail", args=[job.uuid]),
+        },
+    )
 
 
 @login_required

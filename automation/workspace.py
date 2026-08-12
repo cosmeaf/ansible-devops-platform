@@ -12,6 +12,7 @@ name like ``../../etc/cron.d/x`` is refused rather than followed.
 from __future__ import annotations
 
 import re
+import shutil
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -25,8 +26,16 @@ LAYOUT = ("inventories", "playbooks", "roles", "group_vars", "host_vars", "colle
 PLAYBOOK_DIR = "playbooks"
 PLAYBOOK_SUFFIXES = (".yml", ".yaml")
 
-#: Deliberately narrow. A playbook name is a file name, not a shell expression.
+#: Deliberately narrow. A path here is a file name, not a shell expression.
 _SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*$")
+
+#: What the editor will open as text. Anything else is listed but not edited:
+#: rendering a binary in a textarea corrupts it on save.
+EDITABLE_SUFFIXES = {".yml", ".yaml", ".cfg", ".ini", ".j2", ".json", ".txt", ".md", ".sh", ".py"}
+
+#: A file larger than this is almost certainly not something to edit in a
+#: browser, and holding it in a form field helps nobody.
+MAX_EDITABLE_BYTES = 512_000
 
 DEFAULT_ANSIBLE_CFG = """\
 # Managed by the Ansible DevOps Platform, and safe to edit by hand.
@@ -60,6 +69,39 @@ class UnsafePath(ValueError):
 
 class NotAPlaybook(ValueError):
     """Raised when a file exists but is not a playbook the editor handles."""
+
+
+class NotEditable(ValueError):
+    """Raised when a file exists but the editor should not open it."""
+
+
+@dataclass(frozen=True)
+class Entry:
+    """One file or directory in the workspace, described for listing."""
+
+    path: str
+    name: str
+    is_dir: bool
+    size: int = 0
+    modified: datetime | None = None
+
+    @property
+    def suffix(self) -> str:
+        return Path(self.name).suffix
+
+    @property
+    def editable(self) -> bool:
+        return (
+            not self.is_dir and self.suffix in EDITABLE_SUFFIXES and self.size <= MAX_EDITABLE_BYTES
+        )
+
+    @property
+    def is_playbook(self) -> bool:
+        return (
+            not self.is_dir
+            and self.suffix in PLAYBOOK_SUFFIXES
+            and self.path.startswith(PLAYBOOK_DIR + "/")
+        )
 
 
 @dataclass(frozen=True)
@@ -159,6 +201,20 @@ def delete_playbook(name: str) -> None:
     path.unlink()
 
 
+def validate_syntax(content: str) -> list[str]:
+    """Check that *content* is YAML at all.
+
+    This is what any YAML file in the workspace owes: group_vars is a mapping,
+    a playbook is a list of plays, and an inventory is neither. Structure is
+    checked by whoever knows what the file is for.
+    """
+    try:
+        yaml.safe_load(content)
+    except yaml.YAMLError as error:
+        return [f"Invalid YAML: {_yaml_message(error)}"]
+    return []
+
+
 def validate(content: str) -> list[str]:
     """Check *content* the way Ansible would, and say what is wrong.
 
@@ -196,3 +252,160 @@ def _yaml_message(error: yaml.YAMLError) -> str:
     mark = getattr(error, "problem_mark", None)
     problem = getattr(error, "problem", None) or str(error)
     return f"line {mark.line + 1}, column {mark.column + 1}: {problem}" if mark else problem
+
+
+# --- the workspace as a file tree -------------------------------------------
+#
+# Everything below treats the workspace the way an editor does: paths, folders
+# and files, rather than playbooks specifically. The playbook helpers above are
+# the same operations with a narrower door.
+
+
+def resolve(relative: str, *, allow_root: bool = False) -> Path:
+    """Resolve a workspace-relative path, or refuse it.
+
+    The single place that decides whether a path a request supplied is inside
+    the workspace. Everything that touches disk goes through here.
+    """
+    relative = (relative or "").strip()
+    base = ensure_layout().resolve()
+
+    # Refuse an absolute path rather than reinterpreting it: quietly turning
+    # /etc/passwd into a workspace file writes somewhere nobody asked for.
+    if relative.startswith("/"):
+        raise UnsafePath(f"{relative!r} is an absolute path.")
+    relative = relative.strip("/")
+
+    if not relative:
+        if allow_root:
+            return base
+        raise UnsafePath("A path is required.")
+
+    if not _SAFE_NAME.match(relative) or ".." in relative.split("/"):
+        raise UnsafePath(f"{relative!r} is not a valid path.")
+
+    candidate = (base / relative).resolve()
+    # resolve() collapses symlinks and traversal, so this is the real check.
+    if not candidate.is_relative_to(base) or candidate == base:
+        raise UnsafePath(f"{relative!r} is outside the workspace.")
+    return candidate
+
+
+def relative_to_root(path: Path) -> str:
+    return str(path.relative_to(ensure_layout().resolve()))
+
+
+def _entry_for(path: Path) -> Entry:
+    stat = path.stat()
+    return Entry(
+        path=relative_to_root(path),
+        name=path.name,
+        is_dir=path.is_dir(),
+        size=0 if path.is_dir() else stat.st_size,
+        modified=datetime.fromtimestamp(stat.st_mtime, tz=UTC),
+    )
+
+
+def list_dir(relative: str = "") -> list[Entry]:
+    """One directory's contents, folders first, as an editor would show them."""
+    directory = resolve(relative, allow_root=True)
+    if not directory.is_dir():
+        raise NotADirectoryError(relative)
+
+    entries = [_entry_for(child) for child in directory.iterdir() if not child.name.startswith(".")]
+    return sorted(entries, key=lambda e: (not e.is_dir, e.name.lower()))
+
+
+def tree(relative: str = "", *, depth: int = 6) -> list[dict]:
+    """The workspace as a nested structure, for an explorer sidebar."""
+    if depth <= 0:
+        return []
+
+    nodes = []
+    for entry in list_dir(relative):
+        node = {"entry": entry, "children": []}
+        if entry.is_dir:
+            node["children"] = tree(entry.path, depth=depth - 1)
+        nodes.append(node)
+    return nodes
+
+
+def read_file(relative: str) -> str:
+    """Read a text file the editor is allowed to open."""
+    path = resolve(relative)
+    if not path.is_file():
+        raise FileNotFoundError(relative)
+    if path.suffix not in EDITABLE_SUFFIXES:
+        raise NotEditable(f"{path.name} is not a file this editor opens.")
+    if path.stat().st_size > MAX_EDITABLE_BYTES:
+        raise NotEditable(f"{path.name} is too large to edit in a browser.")
+
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        raise NotEditable(f"{path.name} is not text.") from None
+
+
+def write_file(relative: str, content: str) -> Path:
+    """Write a text file, creating any directory the path implies."""
+    path = resolve(relative)
+    if path.exists() and path.is_dir():
+        raise UnsafePath(f"{relative!r} is a directory.")
+    if path.suffix not in EDITABLE_SUFFIXES:
+        raise NotEditable(f"{path.name} is not a file this editor writes.")
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = content.replace("\r\n", "\n")
+    if text and not text.endswith("\n"):
+        text += "\n"
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def create_dir(relative: str) -> Path:
+    path = resolve(relative)
+    if path.exists():
+        raise FileExistsError(relative)
+    path.mkdir(parents=True)
+    return path
+
+
+def delete(relative: str) -> int:
+    """Delete a file, or a directory and everything under it.
+
+    Returns how many files went, so the audit trail can say more than "a
+    folder was removed" — deleting roles/nginx is not a small thing.
+    """
+    path = resolve(relative)
+    if not path.exists():
+        raise FileNotFoundError(relative)
+
+    if path.is_dir():
+        removed = sum(1 for child in path.rglob("*") if child.is_file())
+        shutil.rmtree(path)
+        return removed
+
+    path.unlink()
+    return 1
+
+
+def rename(relative: str, new_relative: str) -> Path:
+    """Move a file or directory within the workspace."""
+    source = resolve(relative)
+    target = resolve(new_relative)
+    if not source.exists():
+        raise FileNotFoundError(relative)
+    if target.exists():
+        raise FileExistsError(new_relative)
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    source.rename(target)
+    return target
+
+
+def count_files(relative: str) -> int:
+    """How many files a path holds, for a confirmation that means something."""
+    path = resolve(relative)
+    if path.is_file():
+        return 1
+    return sum(1 for child in path.rglob("*") if child.is_file())

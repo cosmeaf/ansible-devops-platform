@@ -71,7 +71,12 @@ Nothing below is marked available unless it exists in this repository today.
       play recap, exit code and output
 - ✓ Connection test per server, using Ansible's own ping / win_ping, updating
       the server's status and last successful connection
-- ✓ Playbook editing at `/manage/playbooks/`, validated before it is written
+- ✓ Workspace file explorer — browse the Ansible project as a folder tree,
+      create, edit, rename and delete files and folders; YAML validated as
+      what it is, so group_vars is not judged as a playbook
+- ✓ Audit trail interface at `/manage/audit/` — who did what, when and from
+      where, filterable by person, action, module and resource, with the
+      history of each object shown on its own page
 - ✓ Standard Ansible YAML inventory generated from the registered servers,
       viewable and downloadable at `/manage/inventory/` or written to a file
       with `python manage.py generate_inventory`

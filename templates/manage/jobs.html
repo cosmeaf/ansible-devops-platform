@@ -23,7 +23,7 @@
 <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>Job</th><th>Mode</th><th>Scope</th><th>Requested by</th><th>Started</th><th>Status</th></tr>
+      <tr><th>Job</th><th>Mode</th><th>Scope</th><th>Requested by</th><th>Started</th><th>Status</th><th></th></tr>
     </thead>
     <tbody>
       {% for job in page %}
@@ -47,9 +47,15 @@
           {% elif job.status == "RUNNING" %}<span class="tag tag--info">Running</span>
           {% else %}<span class="tag">{{ job.get_status_display }}</span>{% endif %}
         </td>
+        <td>
+          <div class="row-actions">
+            <a href="{% url 'jobs:detail' job.uuid %}">View</a>
+            {% if perms.jobs.delete_job %}<a href="{% url 'jobs:delete' job.uuid %}" class="is-danger">Delete</a>{% endif %}
+          </div>
+        </td>
       </tr>
       {% empty %}
-      <tr><td colspan="6" class="empty">Nothing has been run yet.</td></tr>
+      <tr><td colspan="7" class="empty">Nothing has been run yet.</td></tr>
       {% endfor %}
     </tbody>
   </table>
