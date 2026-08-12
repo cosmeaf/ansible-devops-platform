@@ -43,6 +43,10 @@
       </a>
 
       <div class="nav__group">Ansible</div>
+      <a href="{% url 'automation:browse' %}" class="{% if section == 'files' %}is-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 3.5A1.5 1.5 0 013 2h3.2l1.3 1.5H13A1.5 1.5 0 0114.5 5v7A1.5 1.5 0 0113 13.5H3A1.5 1.5 0 011.5 12z"/></svg>
+        Files
+      </a>
       <a href="{% url 'automation:playbooks' %}" class="{% if section == 'playbooks' %}is-active{% endif %}">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.5h6.2L13 4.3V14a.5.5 0 01-.5.5h-9A.5.5 0 013 14V2a.5.5 0 011-.5zm5.5 1.2V5H12L9.5 2.7zM5 7v1.2h6V7H5zm0 2.6v1.2h6V9.6H5z"/></svg>
         Playbooks
@@ -60,6 +64,12 @@
       <a href="{% url 'manage:credentials' %}" class="{% if section == 'credentials' %}is-active{% endif %}">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M11 1a4 4 0 00-3.8 5.2L1.5 11.9V14.5H4v-1.5h1.5V11.5H7l1.3-1.3A4 4 0 1011 1zm.8 3.7a1.1 1.1 0 110-2.2 1.1 1.1 0 010 2.2z"/></svg>
         Credentials
+      </a>
+
+      <div class="nav__group">Governance</div>
+      <a href="{% url 'audit:trail' %}" class="{% if section == 'audit' %}is-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.5h5.2L13 5.3V14a.5.5 0 01-.5.5h-9A.5.5 0 013 14V2a.5.5 0 011-.5zM5 7.5v1.2h6V7.5H5zm0 2.8v1.2h4v-1.2H5z"/></svg>
+        Audit trail
       </a>
 
       {% block nav_extra %}{% endblock %}

@@ -44,7 +44,7 @@ def _client_ip(request):
     return request.META.get("REMOTE_ADDR") or None
 
 
-def _audit(request, action, instance, *, module, new=None):
+def _audit(request, action, instance, *, module, new=None, previous=None):
     user = request.user if request.user.is_authenticated else None
     AuditEvent.objects.create(
         user=user,
@@ -56,6 +56,7 @@ def _audit(request, action, instance, *, module, new=None):
         resource_type=instance.__class__.__name__,
         resource_id=str(getattr(instance, "uuid", "") or instance.pk),
         action=action,
+        previous_value=previous,
         new_value=new,
         result=AuditResult.SUCCESS,
         user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
@@ -119,8 +120,15 @@ def _delete(request, *, instance, module, redirect_to, what, blocked_by=""):
 
         # delete() clears the primary key but leaves the UUID, which is what
         # the trail records — an audit entry that cannot name what it removed
-        # would be worthless.
-        _audit(request, AuditAction.DELETE, instance, module=module, new={"name": label})
+        # would be worthless. What was removed belongs in previous_value: there
+        # is no "after" for a deletion.
+        _audit(
+            request,
+            AuditAction.DELETE,
+            instance,
+            module=module,
+            previous={"name": label, "type": instance.__class__.__name__},
+        )
         messages.success(request, f"{label} deleted.")
         return redirect(redirect_to)
 
@@ -205,6 +213,7 @@ def server_detail(request, uuid):
         ),
         uuid=uuid,
     )
+    from audit.views import history_for
     from automation.known_hosts import is_trusted
 
     return render(
@@ -213,6 +222,7 @@ def server_detail(request, uuid):
         {
             "section": "servers",
             "server": server,
+            "history": history_for(server),
             # Ansible refuses a host whose key was never accepted, so the page
             # should say so before someone wonders why a run timed out.
             "host_key_trusted": is_trusted(server.ansible_host, server.ssh_port),

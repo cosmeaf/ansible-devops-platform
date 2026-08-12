@@ -1,0 +1,60 @@
+{% extends "manage/_shell.html" %}
+{% block title %}Audit trail — Ansible DevOps Platform{% endblock %}
+{% block heading %}Audit trail{% endblock %}
+{% block subheading %}Who did what, when, and from where.{% endblock %}
+
+{% block content %}
+<form class="toolbar" method="get">
+  <input type="search" name="resource" value="{{ filters.resource }}" placeholder="Resource…">
+  <select name="module">
+    <option value="">All modules</option>
+    {% for m in modules %}<option value="{{ m }}" {% if m == filters.module %}selected{% endif %}>{{ m }}</option>{% endfor %}
+  </select>
+  <select name="action">
+    <option value="">Any action</option>
+    {% for value, label in actions %}<option value="{{ value }}" {% if value == filters.action %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <select name="username">
+    <option value="">Anyone</option>
+    {% for u in usernames %}<option value="{{ u }}" {% if u == filters.username %}selected{% endif %}>{{ u }}</option>{% endfor %}
+  </select>
+  <select name="result">
+    <option value="">Any result</option>
+    {% for value, label in results %}<option value="{{ value }}" {% if value == filters.result %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <button type="submit" class="btn btn--ghost">Filter</button>
+  <a href="{% url 'audit:trail' %}" class="muted">Clear</a>
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>When</th><th>Who</th><th>Action</th><th>Module</th><th>Resource</th><th>From</th><th>Result</th></tr>
+    </thead>
+    <tbody>
+      {% for e in page %}
+      <tr>
+        <td class="mono muted"><a href="{% url 'audit:event' e.uuid %}">{{ e.created_at|date:"Y-m-d H:i:s" }}</a></td>
+        <td><b>{{ e.username_snapshot|default:"anonymous" }}</b></td>
+        <td>
+          {% if e.action == "DELETE" %}<span class="tag tag--err">Delete</span>
+          {% elif e.action == "CREATE" %}<span class="tag tag--ok">Create</span>
+          {% elif e.action == "EXECUTE" %}<span class="tag tag--warn">Execute</span>
+          {% else %}<span class="tag">{{ e.get_action_display }}</span>{% endif %}
+        </td>
+        <td class="muted">{{ e.module }}</td>
+        <td class="mono muted">{{ e.resource_type }}{% if e.resource_id %} · {{ e.resource_id|truncatechars:26 }}{% endif %}</td>
+        <td class="mono muted">{{ e.source_ip|default:"—" }}</td>
+        <td>
+          {% if e.result == "SUCCESS" %}<span class="tag tag--ok">Success</span>
+          {% else %}<span class="tag tag--err">{{ e.get_result_display }}</span>{% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="empty">No events match.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "manage/_pager.html" %}
+{% endblock %}

@@ -219,7 +219,8 @@ def test_a_deletion_is_recorded_in_the_audit_trail(logged_in):
 
     event = AuditEvent.objects.filter(action=AuditAction.DELETE).latest("created_at")
     assert event.resource_type == "ServerGroup"
-    assert event.new_value == {"name": "webservers"}
+    # A deletion has no "after", so what was removed is the previous value.
+    assert event.previous_value == {"name": "webservers", "type": "ServerGroup"}
 
 
 # --- permissions ------------------------------------------------------------
