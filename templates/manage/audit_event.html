@@ -1,0 +1,61 @@
+{% extends "manage/_shell.html" %}
+{% block title %}Audit event — Ansible DevOps Platform{% endblock %}
+{% block heading %}{{ event.get_action_display }} · {{ event.resource_type|default:event.module }}{% endblock %}
+{% block subheading %}{{ event.created_at|date:"Y-m-d H:i:s" }} by {{ event.username_snapshot|default:"anonymous" }}{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+  <a href="{% url 'audit:trail' %}" class="btn btn--ghost" style="text-decoration:none">← Audit trail</a>
+</div>
+
+<div class="grid">
+  <div class="tile">
+    <span class="tile__label">Who</span>
+    <div class="tile__value">{{ event.username_snapshot|default:"anonymous" }}</div>
+    <span class="tile__hint">{% if event.user %}account still exists{% else %}account since removed{% endif %}</span>
+  </div>
+  <div class="tile">
+    <span class="tile__label">From</span>
+    <div class="tile__value mono">{{ event.source_ip|default:"—" }}</div>
+    <span class="tile__hint">{{ event.country|default:"unknown origin" }}</span>
+  </div>
+  <div class="tile">
+    <span class="tile__label">Resource</span>
+    <div class="tile__value mono">{{ event.resource_type|default:"—" }}</div>
+    <span class="tile__hint mono">{{ event.resource_id|default:"" }}</span>
+  </div>
+  <div class="tile">
+    <span class="tile__label">Request</span>
+    <div class="tile__value mono">{{ event.request_id|truncatechars:14|default:"—" }}</div>
+    <span class="tile__hint">correlates with the logs</span>
+  </div>
+</div>
+
+<div class="table-wrap" style="padding:14px;margin-top:16px">
+  <div style="font-size:12.5px;font-weight:600;margin-bottom:8px">Before</div>
+  <pre class="mono" style="margin:0;font-size:12.5px">{{ event.previous_value|default:"—" }}</pre>
+</div>
+
+<div class="table-wrap" style="padding:14px;margin-top:14px">
+  <div style="font-size:12.5px;font-weight:600;margin-bottom:8px">After</div>
+  <pre class="mono" style="margin:0;font-size:12.5px">{{ event.new_value|default:"—" }}</pre>
+</div>
+
+{% if related %}
+<div class="table-wrap" style="margin-top:16px">
+  <table>
+    <thead><tr><th colspan="4">Everything else recorded against this resource</th></tr></thead>
+    <tbody>
+      {% for e in related %}
+      <tr>
+        <td class="mono muted"><a href="{% url 'audit:event' e.uuid %}">{{ e.created_at|date:"Y-m-d H:i:s" }}</a></td>
+        <td>{{ e.username_snapshot|default:"anonymous" }}</td>
+        <td><span class="tag">{{ e.get_action_display }}</span></td>
+        <td class="muted">{{ e.module }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

@@ -10,14 +10,16 @@ An open-source, self-hosted platform for DevOps automation and infrastructure
 management, powered by Ansible.
 
 > **Project status: Alpha — early development.**
-> Module 1 (Core Platform) is the only module implemented. This is not yet
-> suitable for production use.
+> The core platform and the Ansible module are implemented: infrastructure,
+> workspace, inventory generation and playbook execution all work end to end.
+> The web interface is server-rendered; the Next.js module is still planned.
+> Not yet suitable for production use.
 
 ![Ansible management](docs/images/manage-servers.png)
 
 <p align="center">
   <sub>Managing Ansible infrastructure from the platform.
-  <a href="docs/interface.md">More screenshots</a></sub>
+  <a href="docs/interface.md">Every screen</a></sub>
 </p>
 
 ---
@@ -60,8 +62,31 @@ Nothing below is marked available unless it exists in this repository today.
 - ✓ Database-backed platform settings with secret masking
 - ✓ Role-based access control — five system roles, permissions resolved
       through roles, `is_staff`/`is_superuser` derived rather than hand-set
-- ✓ Ansible infrastructure management at `/manage/` — servers, groups and
-      environments, mapping directly onto a standard Ansible inventory
+- ✓ Ansible infrastructure management at `/manage/` — register servers from the
+      web or the API, with clients, groups and environments, mapping directly
+      onto a standard Ansible inventory
+- ✓ SSH, WinRM and (planned) agent connection methods across Linux, Windows,
+      AIX, Solaris, HP-UX, BSD, macOS and network devices
+- ✓ Encrypted credential storage — write-only secrets that can never be read back
+- ✓ Playbook execution through Ansible Runner on Celery, with check mode,
+      --limit, tags and extra vars; every run recorded as a Job with its
+      play recap, exit code and output
+- ✓ Connection test per server, using Ansible's own ping / win_ping, updating
+      the server's status and last successful connection
+- ✓ Workspace file explorer — the one place the Ansible project is edited:
+      browse it as a folder tree,
+      create, edit, rename and delete files and folders; YAML validated as
+      what it is, so group_vars is not judged as a playbook
+- ✓ Audit trail interface at `/manage/audit/` — who did what, when and from
+      where, filterable by person, action, module and resource, with the
+      history of each object shown on its own page
+- ✓ Standard Ansible YAML inventory generated from the registered servers,
+      viewable and downloadable at `/manage/inventory/` or written to a file
+      with `python manage.py generate_inventory`
+- ✓ Import an existing `~/.ssh/config` as inventory, including its banner
+      comments as clients — `python manage.py import_ssh_config`
+- ✓ REST API at `/api/v1/` for servers, clients, groups, environments and
+      credentials, with filtering, search and audit on every write
 - ✓ Session authentication
 - ✓ Health endpoint reporting database and Redis state
 - ✓ Request-ID correlation across responses and logs
@@ -71,7 +96,6 @@ Nothing below is marked available unless it exists in this repository today.
 ### Planned
 
 - ○ Next.js web UI (`ansible-web`) — Module 2
-- ○ Ansible Runner execution engine — Module 3
 - ○ Infrastructure inventory (`InfrastructureAsset`)
 - ○ Credential storage with envelope encryption
 - ○ Job scheduling, live logs and run history
@@ -153,7 +177,11 @@ docker compose down         # stop, keeping data
 ├── audit/                 Audit trail, request-ID middleware, secret redaction
 ├── security/              Security event records
 ├── ipintel/               IP intelligence models and provider abstraction
-├── infrastructure/        Servers, groups, environments — what Ansible manages
+├── infrastructure/        Servers, clients, groups, environments
+├── inventory/             Ansible inventory generation from the registered servers
+├── automation/            Workspace, playbook editor and the Ansible Runner engine
+├── jobs/                  Job model, execution tasks and run history
+├── credentials/           Encrypted SSH / become credentials
 ├── settings_platform/     Database-backed operational settings
 ├── tests/                 Test suite (runs against real PostgreSQL)
 ├── templates/             Minimal server-rendered pages

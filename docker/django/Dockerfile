@@ -11,9 +11,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# curl is required by the container HEALTHCHECK below.
+# curl is required by the container HEALTHCHECK below. openssh-client is how
+# Ansible connects at all — without it every run fails with "No such file or
+# directory: b'ssh'". sshpass is what Ansible shells out to for a password
+# credential; key-based auth does not need it, password auth cannot work
+# without it.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends curl \
+ && apt-get install -y --no-install-recommends curl openssh-client sshpass \
  && rm -rf /var/lib/apt/lists/*
 
 # Dependencies are copied and installed first so that source edits do not
@@ -25,9 +29,12 @@ COPY . .
 
 # Run unprivileged. /app stays root-owned and read-only to the app user;
 # only the writable runtime directory is handed over.
+# The workspace is created here so that the named volume mounted over it
+# inherits this ownership on first use; a volume Docker creates itself lands
+# root-owned and the unprivileged app cannot write a playbook to it.
 RUN useradd --system --create-home --uid 10001 ansible \
- && mkdir -p /app/staticfiles /var/run/ansible \
- && chown -R ansible:ansible /app/staticfiles /var/run/ansible
+ && mkdir -p /app/staticfiles /var/run/ansible /app/workspace/ansible \
+ && chown -R ansible:ansible /app/staticfiles /var/run/ansible /app/workspace
 
 USER ansible
 

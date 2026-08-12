@@ -37,6 +37,37 @@
         Environments
       </a>
 
+      <a href="{% url 'manage:clients' %}" class="{% if section == 'clients' %}is-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M2 14V5l6-3 6 3v9H9.5v-3.5h-3V14H2z"/></svg>
+        Clients
+      </a>
+
+      <div class="nav__group">Ansible</div>
+      <a href="{% url 'automation:browse' %}" class="{% if section == 'files' %}is-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 3.5A1.5 1.5 0 013 2h3.2l1.3 1.5H13A1.5 1.5 0 0114.5 5v7A1.5 1.5 0 0113 13.5H3A1.5 1.5 0 011.5 12z"/></svg>
+        Files
+      </a>
+      <a href="{% url 'jobs:list' %}" class="{% if section == 'jobs' %}is-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5A6.5 6.5 0 1014.5 8 6.5 6.5 0 008 1.5zm.75 3v3.2l2.4 1.4-.75 1.3L7.25 8.4V4.5z"/></svg>
+        Jobs
+      </a>
+      <a href="{% url 'inventory:preview' %}" class="{% if section == 'inventory' %}is-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1.5 3v1.5h7V5h-7zm0 3v1.5h7V8h-7zm0 3v1.5h4.5V11H4.5z"/></svg>
+        Inventory
+      </a>
+
+      <div class="nav__group">Access</div>
+      <a href="{% url 'manage:credentials' %}" class="{% if section == 'credentials' %}is-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M11 1a4 4 0 00-3.8 5.2L1.5 11.9V14.5H4v-1.5h1.5V11.5H7l1.3-1.3A4 4 0 1011 1zm.8 3.7a1.1 1.1 0 110-2.2 1.1 1.1 0 010 2.2z"/></svg>
+        Credentials
+      </a>
+
+      <div class="nav__group">Governance</div>
+      <a href="{% url 'audit:trail' %}" class="{% if section == 'audit' %}is-active{% endif %}">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M4 1.5h5.2L13 5.3V14a.5.5 0 01-.5.5h-9A.5.5 0 013 14V2a.5.5 0 011-.5zM5 7.5v1.2h6V7.5H5zm0 2.8v1.2h4v-1.2H5z"/></svg>
+        Audit trail
+      </a>
+
       {% block nav_extra %}{% endblock %}
     </nav>
 
@@ -62,6 +93,14 @@
     </header>
 
     <div class="main__body">
+      {% if messages %}
+        {% for message in messages %}
+        <div class="flash {% if message.tags %}flash--{{ message.tags }}{% endif %}" role="status">
+          {{ message }}
+        </div>
+        {% endfor %}
+      {% endif %}
+
       {% block content %}{% endblock %}
     </div>
   </div>

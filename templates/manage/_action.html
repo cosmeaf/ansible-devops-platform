@@ -1,0 +1,24 @@
+{% comment %}
+One row action, as an icon with its label.
+
+Every icon lives here so the set stays consistent — a trash can that means
+delete on one screen and something else on another is worse than no icon.
+
+  {% include "manage/_action.html" with icon="delete" label="Delete" url=... danger=1 %}
+{% endcomment %}
+<a href="{{ url }}" class="{% if danger %}is-danger{% endif %}" title="{{ label }}" aria-label="{{ label }}">
+  {% if icon == "view" %}
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 3C4.6 3 1.8 5.1 1 8c.8 2.9 3.6 5 7 5s6.2-2.1 7-5c-.8-2.9-3.6-5-7-5zm0 8.2A3.2 3.2 0 1111.2 8 3.2 3.2 0 018 11.2zm0-5a1.8 1.8 0 100 3.6 1.8 1.8 0 000-3.6z"/></svg>
+  {% elif icon == "edit" %}
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M11.7 1.3a1.1 1.1 0 011.6 0l1.4 1.4a1.1 1.1 0 010 1.6l-1 1L10.7 2.3zM9.6 3.4l4 4-7.3 7.3H2.3v-4z"/></svg>
+  {% elif icon == "rename" %}
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M9.2 2.6l4.6 4.6a.8.8 0 010 1.1L9.2 12.9a.8.8 0 01-1.4-.6V10H2.6a.8.8 0 01-.8-.8V6.3a.8.8 0 01.8-.8h5.2V3.2a.8.8 0 011.4-.6z"/></svg>
+  {% elif icon == "delete" %}
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6.2 1.5h3.6a.7.7 0 01.7.6l.1.7h3a.7.7 0 010 1.5H2.4a.7.7 0 010-1.5h3l.1-.7a.7.7 0 01.7-.6zM3.6 5.8h8.8l-.6 7.6a1.4 1.4 0 01-1.4 1.3H5.6a1.4 1.4 0 01-1.4-1.3zm2.5 1.8v5.2h1.2V7.6zm2.6 0v5.2h1.2V7.6z"/></svg>
+  {% elif icon == "run" %}
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4.5 2.6l8.2 4.7a.8.8 0 010 1.4L4.5 13.4a.8.8 0 01-1.2-.7V3.3a.8.8 0 011.2-.7z"/></svg>
+  {% elif icon == "folder" %}
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1.5 3.5A1.5 1.5 0 013 2h3.2l1.3 1.5H13A1.5 1.5 0 0114.5 5v7A1.5 1.5 0 0113 13.5H3A1.5 1.5 0 011.5 12z"/></svg>
+  {% endif %}
+  <span>{{ label }}</span>
+</a>

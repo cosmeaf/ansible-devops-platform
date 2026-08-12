@@ -20,6 +20,9 @@ VERSION = __version__
 # ---------------------------------------------------------------------------
 
 SECRET_KEY = config("DJANGO_SECRET_KEY")
+#: Encrypts stored credential material. Generated at bootstrap, kept out of
+#: the database so a dump alone yields no secret.
+PLATFORM_ENCRYPTION_KEY = config("PLATFORM_ENCRYPTION_KEY", default="")
 DEBUG = config("DJANGO_DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
 
@@ -32,6 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+    "django_filters",
     "authentication",
     "commun",
     "security",
@@ -39,6 +43,10 @@ INSTALLED_APPS = [
     "audit",
     "settings_platform",
     "infrastructure",
+    "credentials",
+    "inventory",
+    "automation",
+    "jobs",
 ]
 
 MIDDLEWARE = [
@@ -183,6 +191,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 50,
     "DEFAULT_THROTTLE_CLASSES": [
@@ -199,6 +208,17 @@ if DEBUG:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
         "rest_framework.renderers.BrowsableAPIRenderer"
     )
+
+# ---------------------------------------------------------------------------
+# Ansible workspace — ordinary files on disk, not rows in a table.
+#
+# Playbooks, roles and variables live here as standard Ansible files so they
+# keep working outside the platform. See ADR 0005.
+# ---------------------------------------------------------------------------
+
+ANSIBLE_WORKSPACE = Path(
+    config("ANSIBLE_WORKSPACE", default=str(BASE_DIR / "workspace" / "ansible"))
+)
 
 # ---------------------------------------------------------------------------
 # CORS — deny by default; the Next.js module will add its own origin.

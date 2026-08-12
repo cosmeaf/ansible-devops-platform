@@ -1,0 +1,103 @@
+{% extends "manage/_shell.html" %}
+{% block title %}{{ job.label }} — Ansible DevOps Platform{% endblock %}
+{% block heading %}{{ job.label }}{% endblock %}
+{% block subheading %}
+  {% if job.check_mode %}Check mode — nothing was changed.{% else %}{{ job.get_kind_display }}{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+  <a href="{% url 'jobs:list' %}" class="btn btn--ghost" style="text-decoration:none">← All jobs</a>
+  {% if perms.jobs.delete_job %}
+    <a href="{% url 'jobs:delete' job.uuid %}" class="btn btn--ghost"
+       style="margin-left:auto;text-decoration:none;color:var(--danger)">Delete record</a>
+  {% endif %}
+</div>
+
+<div class="grid">
+  <div class="tile">
+    <span class="tile__label">Status</span>
+    <div class="tile__value" id="job-status">{{ job.get_status_display }}</div>
+    <span class="tile__hint" id="job-hint">
+      {% if job.finished %}Exit code {{ job.exit_code|default:"—" }}{% else %}Watching…{% endif %}
+    </span>
+  </div>
+  <div class="tile">
+    <span class="tile__label">Hosts</span>
+    <div class="tile__value">{{ job.servers.count }}</div>
+    <span class="tile__hint">{{ job.environment.name|default:"any environment" }}</span>
+  </div>
+  <div class="tile">
+    <span class="tile__label">Requested by</span>
+    <div class="tile__value">{{ job.requested_by.username|default:"—" }}</div>
+    <span class="tile__hint">{{ job.created_at|date:"Y-m-d H:i" }}</span>
+  </div>
+  <div class="tile">
+    <span class="tile__label">Duration</span>
+    <div class="tile__value">{{ job.duration|default:"—" }}</div>
+    <span class="tile__hint">{{ job.started_at|date:"H:i:s"|default:"not started" }}</span>
+  </div>
+</div>
+
+{% if job.error %}
+<div class="alert" role="alert" style="margin-top:16px"><span>{{ job.error }}</span></div>
+{% endif %}
+
+{% if job.recap %}
+<div class="table-wrap" style="margin-top:16px">
+  <table>
+    <thead><tr><th>Host</th><th>ok</th><th>changed</th><th>failed</th><th>unreachable</th><th>skipped</th></tr></thead>
+    <tbody>
+      {% for host, stats in job.recap.items %}
+      <tr>
+        <td class="mono"><b>{{ host }}</b></td>
+        <td class="mono">{{ stats.ok }}</td>
+        <td class="mono">{{ stats.changed }}</td>
+        <td class="mono">{{ stats.failures }}</td>
+        <td class="mono">{{ stats.unreachable }}</td>
+        <td class="mono">{{ stats.skipped }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="table-wrap" style="padding:14px;margin-top:16px">
+  <div style="font-size:12.5px;font-weight:600;margin-bottom:8px">Output</div>
+  <pre class="mono" id="job-output" style="margin:0;overflow:auto;max-height:520px;font-size:12.5px;line-height:1.5">{{ job.output|default:"Waiting for the worker to pick this up…" }}</pre>
+</div>
+
+{% if not job.finished %}
+<script>
+  // Poll while the run is in flight. Not a WebSocket yet — this is honest
+  // about being a poll, and stops the moment the job reports it is done.
+  (function () {
+    const url = "{% url 'jobs:status' job.uuid %}";
+    const status = document.getElementById('job-status');
+    const hint = document.getElementById('job-hint');
+    const output = document.getElementById('job-output');
+
+    const tick = async () => {
+      try {
+        const response = await fetch(url, {headers: {'X-Requested-With': 'fetch'}});
+        if (!response.ok) return;
+        const data = await response.json();
+        status.textContent = data.label;
+        if (data.output) output.textContent = data.output;
+        if (data.finished) {
+          hint.textContent = 'Exit code ' + (data.exit_code === null ? '—' : data.exit_code);
+          clearInterval(timer);
+          window.location.reload();
+        }
+      } catch (error) {
+        // A failed poll is not worth interrupting the page for.
+      }
+    };
+
+    const timer = setInterval(tick, 2000);
+    tick();
+  })();
+</script>
+{% endif %}
+{% endblock %}

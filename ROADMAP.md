@@ -51,29 +51,29 @@ Before you can automate infrastructure, the platform has to know it exists.
 - [ ] Environments (production, staging, development)
 - [ ] Groups and tagging
 - [ ] Credential storage with envelope encryption
-- [ ] Connection testing
+- [x] Connection testing
 
 ## 0.4.0 — Ansible Automation
 
 The point of the whole project. Ansible remains the engine; nothing here
 becomes a proprietary format.
 
-- [ ] Inventory generation, compatible with standard Ansible inventories
-- [ ] Playbook management (standard Ansible YAML)
-- [ ] Role management
-- [ ] Variable management
+- [x] Inventory generation, compatible with standard Ansible inventories
+- [x] Playbook management (standard Ansible YAML)
+- [x] Role management — as files; no scaffolding generator yet
+- [x] Variable management — group_vars and host_vars are editable
 - [ ] Monaco-based editor
-- [ ] Ansible Runner integration
-- [ ] Check mode (dry run)
-- [ ] Execution
+- [x] Ansible Runner integration
+- [x] Check mode (dry run)
+- [x] Execution
 
 ## 0.5.0 — Operations
 
-- [ ] Job model and lifecycle
+- [x] Job model and lifecycle
 - [ ] Scheduler
 - [ ] WebSocket transport
 - [ ] Live execution logs
-- [ ] Run history and diffing
+- [ ] Run history and diffing — history done, diffing not
 - [ ] Notifications
 
 ## 0.6.0 — Git Integration

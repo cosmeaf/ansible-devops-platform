@@ -1,0 +1,68 @@
+{% extends "manage/_shell.html" %}
+{% block title %}Jobs — Ansible DevOps Platform{% endblock %}
+{% block heading %}Jobs{% endblock %}
+{% block subheading %}Every execution, and what it did.{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+  {% if perms.jobs.add_job %}
+    <a href="{% url 'jobs:run' %}" class="btn" style="width:auto;text-decoration:none">Run a playbook</a>
+  {% endif %}
+  <form class="toolbar__filters" method="get">
+  <select name="status">
+    <option value="">Any status</option>
+    {% for value, label in statuses %}
+      <option value="{{ value }}" {% if value == selected_status %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+    <button type="submit" class="btn btn--ghost">Filter</button>
+    {% if selected_status %}<a href="{% url 'jobs:list' %}" class="muted">Clear</a>{% endif %}
+  </form>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Mode</th><th>Scope</th><th>Requested by</th><th>Started</th><th>Status</th><th class="col-actions"></th></tr>
+    </thead>
+    <tbody>
+      {% for job in page %}
+      <tr>
+        <td><a href="{% url 'jobs:detail' job.uuid %}"><b class="mono">{{ job.label }}</b></a></td>
+        <td>
+          {% if job.kind == "CONNECTION_TEST" %}<span class="tag">Test</span>
+          {% elif job.check_mode %}<span class="tag tag--warn">Check</span>
+          {% else %}<span class="tag tag--info">Execute</span>{% endif %}
+        </td>
+        <td class="muted">
+          {% if job.environment %}{{ job.environment.name }}{% endif %}
+          {% if job.client %}· {{ job.client.name }}{% endif %}
+          {% if job.limit %}<span class="mono">--limit {{ job.limit }}</span>{% endif %}
+        </td>
+        <td class="muted">{{ job.requested_by.username|default:"—" }}</td>
+        <td class="mono muted">{{ job.started_at|date:"Y-m-d H:i"|default:"—" }}</td>
+        <td>
+          {% if job.status == "SUCCESS" %}<span class="tag tag--ok">Success</span>
+          {% elif job.status == "FAILED" or job.status == "TIMEOUT" %}<span class="tag tag--err">{{ job.get_status_display }}</span>
+          {% elif job.status == "RUNNING" %}<span class="tag tag--info">Running</span>
+          {% else %}<span class="tag">{{ job.get_status_display }}</span>{% endif %}
+        </td>
+        <td class="col-actions">
+          <div class="row-actions">
+            {% url 'jobs:detail' job.uuid as detail_url %}
+            {% include "manage/_action.html" with icon="view" label="View" url=detail_url %}
+            {% if perms.jobs.delete_job %}
+              {% url 'jobs:delete' job.uuid as delete_url %}
+              {% include "manage/_action.html" with icon="delete" label="Delete" url=delete_url danger=1 %}
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="empty">Nothing has been run yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "manage/_pager.html" %}
+{% endblock %}

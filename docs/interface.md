@@ -4,7 +4,7 @@ The platform has two distinct surfaces, and the split is deliberate:
 
 | Surface | Purpose | Audience |
 |---|---|---|
-| **`/manage/`** | **Managing Ansible** — servers, groups, environments, and (planned) inventories, playbooks and jobs | Everyone using the product |
+| **`/manage/`** | **Managing Ansible** — servers, clients, groups, environments, credentials, and (planned) inventories, playbooks and jobs | Everyone using the product |
 | **`/admin/`** | Platform internals — audit trail, security events, IP intelligence, platform settings, users and roles | Operators only |
 
 Signing in takes you **straight into Ansible management**. There is no landing
@@ -61,13 +61,62 @@ Status is only ever set by a real connection test — it is never assumed.
 
 ---
 
-## Server detail
+## Registering a server
 
-![Server detail](images/manage-server-detail.png)
+![Register a server](images/manage-server-new.png)
 
-Per-host detail, including **exactly what this server contributes to an Ansible
-inventory**. Those variables are standard Ansible; they work with
-`ansible-playbook` directly, with or without this platform.
+Servers are registered from the web — no shell required. The form captures what
+Ansible needs to reach a host and nothing more.
+
+A host must be **addressable**: either an IP or a hostname. Ansible would
+otherwise fall back to the inventory name, which works only if DNS happens to
+resolve it, and fails at execution time rather than at registration.
+
+**Connection method is separate from operating system**, deliberately. A Windows
+host reached over SSH is a real configuration, so the transport decides
+`ansible_connection`, not the OS. Choosing WinRM defaults the port to 5986.
+
+Everything here is also available over the API:
+
+```bash
+curl -X POST http://localhost:47420/api/v1/servers/ \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"web01","primary_ip":"198.51.100.11","groups":["webservers"]}'
+```
+
+Both paths enforce the same permissions and write the same audit event.
+
+---
+
+## Clients
+
+![Clients](images/manage-clients.png)
+
+The customer or business unit that owns a set of servers, for anyone managing
+infrastructure for more than one party. Optional — a single-tenant install can
+ignore it.
+
+A client cannot be deleted while it still owns servers.
+
+---
+
+## Credentials
+
+![Credentials](images/manage-credentials.png)
+
+SSH keys, SSH passwords and become (sudo) passwords, **encrypted at rest** with
+`PLATFORM_ENCRYPTION_KEY` — which lives in `.env`, never in the database. A
+database dump on its own therefore yields nothing.
+
+A stored secret **can never be read back**:
+
+- the API serializer field is write-only, so no endpoint can return it;
+- the admin and web forms never populate the field from the stored value;
+- `__str__` and the audit trail never contain it.
+
+Leave the secret blank when editing to keep the existing one. `use` is a
+distinct permission from `view`, so an operator can run a playbook with a
+credential without ever being able to see it.
 
 ---
 
@@ -91,15 +140,108 @@ production before you trust the platform.
 
 ---
 
+## Server detail
+
+![A server](images/manage-server-detail.png)
+
+Everything known about one host, and the actions that act on it: edit, delete,
+and **test connection**, which runs Ansible's own `ping` (or `win_ping` for
+WinRM) and records the result.
+
+Ansible refuses to connect to a host whose key it has never seen, so a server
+whose host key has not been accepted says so here rather than letting a run
+time out for reasons nobody can see. Reviewing the fingerprint shows what the
+host offered, next to the command that prints the same fingerprint on the
+machine itself. Accepting it is recorded in the audit trail; forgetting it is
+possible too, for a host that was legitimately rebuilt.
+
+The page also carries that server's own history — who changed it, and when.
+
+---
+
+## Files
+
+![Workspace](images/manage-files.png)
+
+The Ansible project as it exists on disk: a folder tree, and a listing you can
+walk into. Create, edit, rename and delete **files and folders** — `playbooks/`,
+`roles/`, `group_vars/`, `host_vars/`, `inventories/`, `ansible.cfg`.
+
+There is one such screen, not two. `/manage/playbooks/` opens the explorer
+at `playbooks/` rather than showing the same files again under a second
+heading.
+
+Nothing here is a proprietary format. The workspace is a standard Ansible
+layout, and everything written through the editor keeps working with plain
+`ansible-playbook` if the platform disappears.
+
+YAML is validated before it is written, as what it actually is: a file under
+`playbooks/` must be a list of plays, while `group_vars/all.yml` only has to
+parse. Deleting a folder says how many files would go before it takes them.
+
+---
+
+---
+
+## Inventory
+
+![Inventory](images/manage-inventory.png)
+
+The registered servers rendered as a standard Ansible YAML inventory, with the
+group tree `ansible-inventory --graph` would print. Download it and it runs
+anywhere Ansible does.
+
+Environments appear as `env_*` groups and clients as `client_*`, so either can
+be used with `--limit` without colliding with a group someone defined.
+
+---
+
+## Jobs
+
+![Running a playbook](images/manage-job-run.png)
+
+Every execution is a job. Choose the playbook, narrow the scope by
+environment, client or group, and add `--limit`, tags and extra vars.
+
+**Check mode is on by default.** A dry run is the safe thing to reach for, so
+turning it off is a decision rather than an omission. A run whose filters
+resolve to no server is refused: an empty selection is a filter mistake, not a
+job worth queueing.
+
+![Jobs](images/manage-jobs.png)
+
+The job page shows the play recap per host, the exit code and the output, and
+follows a run while it is still going. Execution happens on a Celery worker
+through Ansible Runner, never in the request.
+
+---
+
+## Audit trail
+
+![Audit trail](images/manage-audit.png)
+
+Who did what, when, and from where — filterable by person, action, module and
+resource. Recording an action nobody can look at answers no question, which is
+why this is product surface rather than something only a database client can
+reach.
+
+Every event can be opened in full, showing what the value was before and after,
+and the other events recorded against the same resource. Deletions record what
+was removed: there is no "after" for a deletion.
+
+The trail is read-only by construction. No role grants the right to delete an
+audit event, administrators included.
+
+---
+
 ## Platform internals
 
-Audit, security events, IP intelligence, platform settings, users and roles are
-managed in **Django Admin** at `/admin/`, restricted to accounts whose role
-grants admin access.
+Security events, IP intelligence, platform settings, users and roles are managed
+in **Django Admin** at `/admin/`, restricted to accounts whose role grants admin
+access.
 
 They are operator concerns, not part of managing Ansible, which is why they are
-not in the product surface. The audit trail remains read-only even there — see
-[audit.md](audit.md).
+not in the product surface. See [audit.md](audit.md).
 
 ---
 

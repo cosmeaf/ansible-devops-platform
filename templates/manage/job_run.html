@@ -1,0 +1,28 @@
+{% extends "manage/_shell.html" %}
+{% block title %}Run a playbook — Ansible DevOps Platform{% endblock %}
+{% block heading %}Run a playbook{% endblock %}
+{% block subheading %}Check mode is on by default. Turn it off deliberately.{% endblock %}
+
+{% block content %}
+<form method="post" class="card" style="max-width:720px">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+  <div class="alert" role="alert"><span>{{ form.non_field_errors|join:" " }}</span></div>
+  {% endif %}
+
+  {% for field in form %}
+    <div class="field">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.help_text %}<div class="field__help">{{ field.help_text }}</div>{% endif %}
+      {% for error in field.errors %}<div class="field__error">{{ error }}</div>{% endfor %}
+    </div>
+  {% endfor %}
+
+  <div style="display:flex;gap:10px;margin-top:22px">
+    <button type="submit" class="btn" style="width:auto">Run playbook</button>
+    <a href="{% url 'jobs:list' %}" class="btn btn--ghost" style="text-decoration:none">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -79,7 +79,9 @@ jobs:
     env:
       # CI-only values. These are not secrets: the services are ephemeral,
       # reachable only from this runner, and destroyed when the job ends.
-      DJANGO_SECRET_KEY: ci-only-key-not-used-anywhere-else
+      # The two keys are generated per run rather than written here, so the
+      # repository holds nothing shaped like a key — for a scanner to flag,
+      # or for anyone to copy into a real deployment by mistake.
       DJANGO_DEBUG: "False"
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
       POSTGRES_DB: ansible_platform
@@ -92,6 +94,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Generate throwaway keys for this run
+        run: |
+          echo "DJANGO_SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(50))')" >> "$GITHUB_ENV"
+          echo "PLATFORM_ENCRYPTION_KEY=$(python3 -c 'import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())')" >> "$GITHUB_ENV"
 
       - uses: actions/setup-python@v5
         with:

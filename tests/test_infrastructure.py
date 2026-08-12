@@ -100,14 +100,25 @@ def test_inventory_host_renders_standard_ansible_variables():
         "ansible_host": "10.0.0.5",
         "ansible_port": 2222,
         "ansible_user": "deploy",
+        "ansible_connection": "ssh",
     }
 
 
 @pytest.mark.django_db
-def test_windows_hosts_declare_the_winrm_connection():
-    server = Server.objects.create(name="win01", operating_system=OperatingSystem.WINDOWS)
+def test_the_transport_follows_the_connection_method_not_the_os():
+    """A Windows host may still be reached over SSH, so OS must not decide."""
+    windows_over_ssh = Server.objects.create(
+        name="win-ssh", hostname="a", operating_system=OperatingSystem.WINDOWS
+    )
+    windows_over_winrm = Server.objects.create(
+        name="win-winrm",
+        hostname="b",
+        operating_system=OperatingSystem.WINDOWS,
+        connection_method="WINRM",
+    )
 
-    assert server.to_inventory_host()["ansible_connection"] == "winrm"
+    assert windows_over_ssh.to_inventory_host()["ansible_connection"] == "ssh"
+    assert windows_over_winrm.to_inventory_host()["ansible_connection"] == "winrm"
 
 
 @pytest.mark.django_db
@@ -253,3 +264,128 @@ def test_overview_counts_only_active_servers(client, operator):
     client.force_login(operator)
 
     assert client.get(reverse("manage:overview")).context["counts"]["servers"] == 1
+
+
+# --- web write flows ------------------------------------------------------
+
+
+@pytest.fixture
+def administrator(user, seeded):
+    UserRole.objects.create(user=user, role=Role.objects.get(slug="administrator"))
+    user.refresh_from_db()
+    return user
+
+
+@pytest.mark.django_db
+def test_a_server_can_be_registered_from_the_web_form(client, administrator):
+    client.force_login(administrator)
+
+    response = client.post(
+        reverse("manage:server-create"),
+        {
+            "name": "web09",
+            "primary_ip": "10.0.0.9",
+            "connection_method": "SSH",
+            "ssh_port": 22,
+            "ansible_user": "ansible",
+            "operating_system": "LINUX",
+            "active": "on",
+        },
+    )
+
+    assert response.status_code == 302
+    assert Server.objects.filter(name="web09").exists()
+
+
+@pytest.mark.django_db
+def test_the_web_form_refuses_an_unaddressable_server(client, administrator):
+    client.force_login(administrator)
+
+    response = client.post(
+        reverse("manage:server-create"),
+        {
+            "name": "nowhere",
+            "connection_method": "SSH",
+            "ssh_port": 22,
+            "ansible_user": "ansible",
+            "operating_system": "LINUX",
+        },
+    )
+
+    assert response.status_code == 200
+    assert not Server.objects.filter(name="nowhere").exists()
+
+
+@pytest.mark.django_db
+def test_registering_from_the_web_records_the_creator_and_an_audit_event(client, administrator):
+    from audit.models import AuditEvent
+
+    client.force_login(administrator)
+    client.post(
+        reverse("manage:server-create"),
+        {
+            "name": "web10",
+            "primary_ip": "10.0.0.10",
+            "connection_method": "SSH",
+            "ssh_port": 22,
+            "ansible_user": "ansible",
+            "operating_system": "LINUX",
+        },
+    )
+
+    assert Server.objects.get(name="web10").created_by == administrator
+    assert AuditEvent.objects.filter(module="infrastructure", action="CREATE").exists()
+
+
+@pytest.mark.django_db
+def test_a_viewer_cannot_open_the_registration_form(client, user, seeded):
+    UserRole.objects.create(user=user, role=Role.objects.get(slug="viewer"))
+    client.force_login(user)
+
+    assert client.get(reverse("manage:server-create")).status_code == 403
+
+
+@pytest.mark.django_db
+def test_clients_and_credentials_screens_render(client, administrator):
+    client.force_login(administrator)
+
+    assert client.get(reverse("manage:clients")).status_code == 200
+    assert client.get(reverse("manage:credentials")).status_code == 200
+
+
+@pytest.mark.django_db
+def test_a_credential_created_from_the_web_form_is_encrypted(client, administrator):
+    from credentials.models import Credential
+
+    client.force_login(administrator)
+    client.post(
+        reverse("manage:credential-create"),
+        {"name": "web-key", "type": "SSH_PASSWORD", "username": "deploy", "secret": "s3cr3t"},
+    )
+
+    credential = Credential.objects.get(name="web-key")
+    assert credential.encrypted_secret != "s3cr3t"
+    assert credential.reveal_secret() == "s3cr3t"
+
+
+@pytest.mark.django_db
+def test_windows_servers_render_winrm_inventory_variables():
+    server = Server.objects.create(name="win01", primary_ip="10.0.0.6", connection_method="WINRM")
+
+    variables = server.to_inventory_host()
+
+    assert variables["ansible_connection"] == "winrm"
+    assert variables["ansible_port"] == 5986
+
+
+@pytest.mark.django_db
+def test_a_client_cannot_be_deleted_while_it_owns_servers():
+    from django.db.models import ProtectedError
+
+    from infrastructure.models import Client
+
+    acme = Client.objects.create(name="Acme")
+    Server.objects.create(name="acme01", primary_ip="10.0.0.5", client=acme)
+
+    with pytest.raises(ProtectedError):
+        acme.delete()
