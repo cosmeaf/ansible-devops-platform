@@ -278,23 +278,22 @@ def resolve(relative: str, *, allow_root: bool = False) -> Path:
         raise UnsafePath(f"{relative!r} is an absolute path.")
     relative = relative.strip("/")
 
+    root = os.path.realpath(base)
+
     if not relative:
         if allow_root:
-            return base
+            return Path(root)
         raise UnsafePath("A path is required.")
 
     if not _SAFE_NAME.match(relative) or ".." in relative.split("/"):
         raise UnsafePath(f"{relative!r} is not a valid path.")
 
-    # realpath collapses symlinks and traversal; the prefix check is then the
-    # whole guarantee, and is written explicitly so it is obvious — and
-    # checkable by a scanner — that nothing outside the root can be reached.
-    root = os.path.realpath(base)
+    # realpath collapses symlinks and traversal; this single prefix check is
+    # then the whole guarantee. Requiring the separator also rejects the root
+    # itself and a sibling directory whose name merely starts the same way.
     candidate = os.path.realpath(os.path.join(root, relative))
-    if candidate != root and not candidate.startswith(root + os.sep):
+    if not candidate.startswith(root + os.sep):
         raise UnsafePath(f"{relative!r} is outside the workspace.")
-    if candidate == root:
-        raise UnsafePath(f"{relative!r} resolves to the workspace root.")
     return Path(candidate)
 
 
