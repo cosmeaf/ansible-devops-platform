@@ -6,12 +6,10 @@
 *.key
 secrets/
 
-# VCS & agent tooling
-.git/
-.github/
+# VCS, editor and local tooling state. Nothing under a dot-directory at the
+# root is needed at runtime, so the whole class is excluded.
+.*/
 .gitignore
-.tokensave/
-.claude/
 prompt.md
 
 # Python build/test artifacts
