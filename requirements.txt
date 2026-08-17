@@ -1,11 +1,11 @@
 # Runtime dependencies — Python 3.12
-Django>=5.1,<5.3
-djangorestframework>=3.15,<3.17
+Django>=6.1,<6.2
+djangorestframework>=3.18.0,<3.19
 psycopg[binary]>=3.2,<3.3
 redis>=5.2,<7
 celery>=5.4,<5.6
-django-cors-headers>=4.6,<5
-django-filter>=24,<26
+django-cors-headers>=4.9.0,<5
+django-filter>=26.1,<27
 python-decouple>=3.8,<4
 cryptography>=50.0.0,<51
 PyYAML>=6.0,<7
